@@ -806,6 +806,7 @@ html.light body {
     padding-inline: 0;
     padding-right: 0;
     padding-left: 0;
+    padding-bottom: 0.9rem;
     text-align: center;
     box-sizing: border-box;
   }
