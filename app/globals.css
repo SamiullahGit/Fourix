@@ -405,6 +405,10 @@
     color: rgba(255, 255, 255, 0.8);
   }
 
+  .portfolio-intro {
+    color: rgba(255, 255, 255, 0.82);
+  }
+
   .contact-card {
     border-color: rgba(17, 17, 17, 0.1);
     background: rgba(255, 255, 255, 0.72);
@@ -746,6 +750,10 @@
   color: rgba(17, 17, 17, 0.74);
 }
 
+.theme-light .portfolio-intro {
+  color: rgba(17, 17, 17, 0.75);
+}
+
 .theme-light .contact-card {
   border-color: rgba(17, 17, 17, 0.08);
   background: rgba(255, 255, 255, 0.92);
@@ -795,17 +803,23 @@ html.light body {
   }
 
   .hero-title-typing__copy {
-    visibility: visible;
+    visibility: hidden;
     line-height: 1.14;
   }
 
   .hero-title-typing__overlay {
-    display: none;
+    display: block;
   }
 
-  .hero-title-typing__copy span {
+  .hero-title-typing__copy span,
+  .hero-title-typing__line {
     white-space: normal;
     display: block;
     padding-bottom: 0.08em;
+  }
+
+  .hero-title-typing__line {
+    width: 100%;
+    clip-path: inset(-0.08em 100% -0.12em 0);
   }
 }

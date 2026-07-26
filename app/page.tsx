@@ -712,7 +712,7 @@ export default function Home() {
           <div className="mx-auto mb-10 max-w-3xl text-center">
             <p className="text-sm font-semibold uppercase tracking-[0.22em] text-primary">Portfolio</p>
             <h2 className="mt-3 text-4xl font-bold md:text-5xl">Our Innovations</h2>
-            <p className="mt-4 text-base text-[#111111]/75 md:text-lg">
+            <p className="portfolio-intro mt-4 text-base md:text-lg">
               Explore our projects through detailed visual showcases. See the innovation in action.
             </p>
           </div>
@@ -850,7 +850,7 @@ export default function Home() {
           <div className="mx-auto mb-10 max-w-3xl text-center">
             <p className="text-sm font-semibold uppercase tracking-[0.22em] text-primary">Technology Stack</p>
             <h2 className="mt-3 text-4xl font-bold md:text-5xl">Technologies We Use</h2>
-            <p className="mt-4 text-base text-[#111111]/75 md:text-lg">
+            <p className="portfolio-intro mt-4 text-base md:text-lg">
               We use modern tools and platforms to build reliable, scalable software.
             </p>
           </div>
@@ -946,7 +946,7 @@ export default function Home() {
           <div className="mb-10 text-center">
             <p className="text-sm font-semibold uppercase tracking-[0.22em] text-primary">Workflow</p>
             <h2 className="mt-3 text-4xl font-bold md:text-5xl">How we move</h2>
-            <p className="mx-auto mt-4 max-w-2xl text-base text-[#111111]/75 md:text-lg">
+            <p className="portfolio-intro mx-auto mt-4 max-w-2xl text-base md:text-lg">
               A premium product journey designed to move from strategy to polished execution with clarity and velocity.
             </p>
           </div>
