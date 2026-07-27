@@ -6,12 +6,10 @@ import {
   ArrowUpRight,
   Bot,
   CalendarDays,
-  Camera,
   CheckCircle2,
   CircleUserRound,
   Globe,
   Layers3,
-  Link,
   MapPin,
   Mail,
   Menu,
@@ -19,7 +17,6 @@ import {
   Moon,
   Phone,
   Rocket,
-  ScanSearch,
   ShieldCheck,
   Sparkles,
   Sun,
@@ -65,47 +62,6 @@ const services = [
     description:
       'User-centric design solutions that create intuitive, engaging, and beautiful digital experiences for your users.',
     icon: Sparkles,
-  },
-] as const;
-
-const projects = [
-  {
-    title: 'Employee Attendence System',
-    type: 'AI & Web',
-    description: 'Face recognition based attendance system',
-    screenshots: [
-      '/Projects/Employee Attendence System/1.png',
-      '/Projects/Employee Attendence System/2.png',
-      '/Projects/Employee Attendence System/3.png',
-      '/Projects/Employee Attendence System/4.png',
-      '/Projects/Employee Attendence System/5.png',
-      '/Projects/Employee Attendence System/6.png',
-      '/Projects/Employee Attendence System/7.png',
-      '/Projects/Employee Attendence System/8.png',
-    ],
-  },
-  {
-    title: 'LUXE',
-    type: 'Web',
-    description: 'Next-gen E-commerce platform',
-    screenshots: [
-      '/Projects/NanoCommerce/1.png',
-      '/Projects/NanoCommerce/2.png',
-      '/Projects/NanoCommerce/3.png',
-    ],
-  },
-  {
-    title: 'AI Resume Builder',
-    type: 'AI & Web',
-    description: 'AI-powered resume generation and optimization platform',
-    screenshots: [
-      '/Projects/AI Resume Builder/1.png',
-      '/Projects/AI Resume Builder/2.png',
-      '/Projects/AI Resume Builder/3.png',
-      '/Projects/AI Resume Builder/4.png',
-      '/Projects/AI Resume Builder/5.png',
-      '/Projects/AI Resume Builder/11.png',
-    ],
   },
 ] as const;
 
@@ -219,60 +175,12 @@ const fadeUp: Variants = {
   }),
 };
 
-function createQrMatrix(seed: string) {
-  const size = 21;
-  const cells = Array.from({ length: size }, () => Array.from({ length: size }, () => false));
-
-  const drawFinder = (startRow: number, startCol: number) => {
-    for (let row = 0; row < 7; row += 1) {
-      for (let col = 0; col < 7; col += 1) {
-        const isEdge = row === 0 || row === 6 || col === 0 || col === 6;
-        const isCenter = row >= 2 && row <= 4 && col >= 2 && col <= 4;
-        cells[startRow + row][startCol + col] = isEdge || isCenter;
-      }
-    }
-  };
-
-  drawFinder(0, 0);
-  drawFinder(0, size - 7);
-  drawFinder(size - 7, 0);
-
-  let hash = 0;
-  for (const char of seed) {
-    hash = (hash * 31 + char.charCodeAt(0)) % 2147483647;
-  }
-
-  for (let row = 0; row < size; row += 1) {
-    for (let col = 0; col < size; col += 1) {
-      const inFinderZone =
-        (row < 7 && col < 7) ||
-        (row < 7 && col >= size - 7) ||
-        (row >= size - 7 && col < 7);
-
-      if (inFinderZone) {
-        continue;
-      }
-
-      hash = (hash * 48271) % 2147483647;
-      cells[row][col] = hash % 3 === 0;
-    }
-  }
-
-  return cells;
-}
-
 export default function Home() {
   const shouldReduceMotion = useReducedMotion();
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
-  const [activeProjectIndex, setActiveProjectIndex] = useState(0);
-  const [activeSlideIndex, setActiveSlideIndex] = useState(0);
-  const [isMobileModalOpen, setIsMobileModalOpen] = useState(false);
   const [heroHeadlineIndex, setHeroHeadlineIndex] = useState(0);
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
 
-  const activeProject = projects[activeProjectIndex];
-  const totalProjectSlides = activeProject.screenshots.length + 1;
-  const qrMatrix = createQrMatrix(activeProject.title);
   const activeHeroHeadline = heroHeadlines[heroHeadlineIndex];
 
   useEffect(() => {
@@ -290,20 +198,6 @@ export default function Home() {
   }, [theme]);
 
   useEffect(() => {
-    const timeout = window.setTimeout(() => {
-      if (activeSlideIndex < totalProjectSlides - 1) {
-        setActiveSlideIndex((current) => current + 1);
-        return;
-      }
-
-      setActiveProjectIndex((current) => (current + 1) % projects.length);
-      setActiveSlideIndex(0);
-    }, shouldReduceMotion ? 4500 : 3000);
-
-    return () => window.clearTimeout(timeout);
-  }, [activeSlideIndex, shouldReduceMotion, totalProjectSlides]);
-
-  useEffect(() => {
     if (shouldReduceMotion) {
       return;
     }
@@ -316,7 +210,7 @@ export default function Home() {
   }, [shouldReduceMotion]);
 
   useEffect(() => {
-    if (!isMobileModalOpen && !isMobileNavOpen) {
+    if (!isMobileNavOpen) {
       return;
     }
 
@@ -326,20 +220,7 @@ export default function Home() {
     return () => {
       document.body.style.overflow = previousOverflow;
     };
-  }, [isMobileModalOpen, isMobileNavOpen]);
-
-  const handleProjectSelect = (index: number) => {
-    setActiveProjectIndex(index);
-    setActiveSlideIndex(0);
-  };
-
-  const handlePortfolioOpen = () => {
-    setIsMobileNavOpen(false);
-
-    window.setTimeout(() => {
-      document.getElementById('portfolio')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }, 60);
-  };
+  }, [isMobileNavOpen]);
 
   return (
     <div
@@ -408,9 +289,6 @@ export default function Home() {
             </div>
 
             <nav className="hidden items-center gap-7 text-sm text-muted-foreground md:flex">
-              <button type="button" onClick={handlePortfolioOpen} className="cursor-pointer transition hover:text-primary">
-                Portfolio
-              </button>
               <a href="#services" className="transition hover:text-primary">
                 Services
               </a>
@@ -486,14 +364,6 @@ export default function Home() {
               </div>
 
               <nav className="mt-6 flex flex-col gap-3 text-base text-foreground">
-                <button
-                  type="button"
-                  onClick={handlePortfolioOpen}
-                  className="inline-flex cursor-pointer items-center justify-between rounded-2xl border border-border/60 px-4 py-3 text-left transition hover:border-primary/40 hover:text-primary"
-                >
-                  <span>Portfolio</span>
-                  <ArrowUpRight className="h-4 w-4" />
-                </button>
                 <a
                   href="#services"
                   onClick={() => setIsMobileNavOpen(false)}
@@ -543,21 +413,21 @@ export default function Home() {
       </AnimatePresence>
 
       <main id="home" className="relative">
-        <section className="mx-auto flex min-h-[92vh] max-w-7xl flex-col justify-center px-5 pt-10 md:px-8 lg:pt-16">
-          <div className="grid items-center gap-12 lg:grid-cols-[1.1fr_0.9fr]">
+        <section className="relative mx-auto flex min-h-[78vh] max-w-7xl flex-col justify-center px-5 pt-4 md:px-8 md:pt-6 lg:min-h-[82vh] lg:pt-8">
+          <div className="flex justify-center">
             <motion.div
               initial={shouldReduceMotion ? false : 'hidden'}
               animate={shouldReduceMotion ? undefined : 'visible'}
               variants={fadeUp}
               custom={0}
-              className="max-w-2xl"
+              className="mx-auto flex max-w-3xl flex-col items-center text-center"
             >
               <div className="hero-pill mb-6 inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.22em]">
                 <Sparkles className="h-3.5 w-3.5" />
                 Premium AI & Digital Growth Studio
               </div>
 
-              <h1 className="hero-title hero-title-typing max-w-3xl pr-3 text-4xl font-black leading-[1.08] tracking-tight md:pr-4 md:text-5xl lg:text-6xl">
+              <h1 className="hero-title hero-title-typing w-full text-4xl font-black leading-[1.08] tracking-tight md:text-5xl lg:text-6xl">
                 <span className="hero-title-typing__copy">
                   <span className="block">{activeHeroHeadline[0]}</span>
                   <span className="hero-title__accent block bg-clip-text text-transparent">{activeHeroHeadline[1]}</span>
@@ -580,12 +450,12 @@ export default function Home() {
                 </span>
               </h1>
 
-              <p className="hero-copy mt-6 max-w-2xl text-lg leading-8 md:text-xl">
+              <p className="hero-copy mx-auto mt-6 max-w-2xl text-lg leading-8 md:text-xl">
                 We help ambitious companies launch faster, convert smarter, and automate better with modern web experiences,
                 polished product apps, and AI systems designed for growth.
               </p>
 
-              <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+              <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
                 <a
                   href="#services"
                   className="hero-button inline-flex items-center justify-center gap-2 rounded-full px-6 py-3.5 text-sm font-semibold transition hover:-translate-y-0.5"
@@ -595,65 +465,18 @@ export default function Home() {
                 </a>
               </div>
 
-              <div className="hero-chip-group mt-10 flex flex-wrap gap-4 text-sm">
+              <div className="hero-chip-group mt-10 flex flex-wrap justify-center gap-4 text-sm">
                 <div className="hero-chip rounded-full px-4 py-2">Fast deployments</div>
                 <div className="hero-chip rounded-full px-4 py-2">AI-first workflows</div>
                 <div className="hero-chip rounded-full px-4 py-2">Conversion-focused UX</div>
               </div>
             </motion.div>
+          </div>
 
-            <motion.div
-              initial={shouldReduceMotion ? false : 'hidden'}
-              animate={shouldReduceMotion ? undefined : 'visible'}
-              variants={fadeUp}
-              custom={0.12}
-              className="relative"
-            >
-              <div className="absolute -left-4 top-4 h-24 w-24 rounded-full bg-primary/20 blur-2xl" />
-              <div className="absolute -right-4 bottom-4 h-28 w-28 rounded-full bg-accent/20 blur-2xl" />
-
-              <div className="panel-light relative overflow-hidden rounded-[28px] border border-border/70 p-5 shadow-[0_30px_80px_rgba(0,0,0,0.35)] backdrop-blur-xl">
-                <div className="panel-light rounded-[22px] border border-border/60 p-6">
-                  <div className="flex items-center justify-between border-b border-border/70 pb-4">
-                    <div>
-                      <p className="text-xs font-semibold uppercase tracking-[0.22em] text-primary">Growth system</p>
-                      <h2 className="mt-2 text-2xl font-bold">Built for modern growth</h2>
-                      <p className="mt-2 text-sm text-[#111111]/65">Clean digital experiences with strategy, speed, and clarity.</p>
-                    </div>
-                    <div className="rounded-full bg-[#0C0C0C]/25 p-2 text-[#0C0C0C]">
-                      <Sparkles className="h-5 w-5" />
-                    </div>
-                  </div>
-
-                  <div className="mt-6 grid gap-4">
-                    <div className="rounded-[24px] border border-black/10 bg-[linear-gradient(135deg,rgba(255,255,255,0.96),rgba(242,242,242,0.92))] p-6 min-h-[17rem] shadow-[0_16px_45px_rgba(0,0,0,0.14)] backdrop-blur-sm">
-                      <div className="flex flex-col justify-center">
-                        <div>
-                          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#111111]/58">Focus</p>
-                          <p className="mt-3 text-3xl font-semibold tracking-tight text-[#111111]">Simple. Modern. Effective.</p>
-                        </div>
-                      </div>
-
-                      <div className="mt-6 grid gap-3 sm:grid-cols-3">
-                        <div className="rounded-2xl border border-border/70 bg-white/55 px-4 py-3">
-                          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#111111]/55">Strategy</p>
-                        </div>
-                        <div className="rounded-2xl border border-border/70 bg-white/55 px-4 py-3">
-                          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#111111]/55">Design</p>
-                        </div>
-                        <div className="rounded-2xl border border-border/70 bg-white/55 px-4 py-3">
-                          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#111111]/55">Growth</p>
-                        </div>
-                      </div>
-
-                      <div className="mt-6 h-1.5 w-full overflow-hidden rounded-full bg-black/8">
-                        <div className="h-full w-[58%] rounded-full bg-gradient-to-r from-[#111111] via-[#7D7465] to-[#CBB99C]" />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
+          <div className="hero-scroll-cue" aria-hidden="true">
+            <span className="hero-scroll-cue__line" />
+            <span className="hero-scroll-cue__text">Scroll to explore</span>
+            <span className="hero-scroll-cue__line" />
           </div>
         </section>
 
@@ -697,145 +520,6 @@ export default function Home() {
                 </motion.article>
               );
             })}
-          </div>
-        </motion.section>
-
-        <motion.section
-          id="portfolio"
-          initial={shouldReduceMotion ? false : 'hidden'}
-          whileInView={shouldReduceMotion ? undefined : 'visible'}
-          viewport={{ once: true, amount: 0.15 }}
-          variants={fadeUp}
-          custom={0}
-          className="mx-auto max-w-7xl px-5 py-20 md:px-8"
-        >
-          <div className="mx-auto mb-10 max-w-3xl text-center">
-            <p className="text-sm font-semibold uppercase tracking-[0.22em] text-primary">Portfolio</p>
-            <h2 className="mt-3 text-4xl font-bold md:text-5xl">Our Innovations</h2>
-            <p className="portfolio-intro mt-4 text-base md:text-lg">
-              Explore our projects through detailed visual showcases. See the innovation in action.
-            </p>
-          </div>
-
-          <div className="relative mx-auto overflow-hidden rounded-[30px] border border-black/10 bg-[linear-gradient(135deg,#EDEDED_0%,#F5F5F5_55%,#FFFFFF_100%)] p-4 shadow-[0_30px_90px_rgba(0,0,0,0.18)] md:p-5">
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.82),_transparent_60%)]" />
-            <div className="relative rounded-[24px] border border-black/10 bg-[linear-gradient(135deg,rgba(255,255,255,0.96),rgba(242,242,242,0.92))] p-4 shadow-[0_16px_45px_rgba(0,0,0,0.14)] backdrop-blur-sm md:p-5">
-              <div className="mb-5 flex items-center justify-between gap-4 border-b border-border/70 pb-4">
-                <div className="inline-flex items-center rounded-full bg-[#0C0C0C]/10 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.18em] text-[#111111]">
-                  Project Showcase
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setIsMobileModalOpen(true)}
-                  className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-border/80 bg-white/70 text-[#111111] transition hover:-translate-y-0.5 hover:border-primary/40 hover:bg-white dark:bg-black/20"
-                  aria-label={`Open mobile view for ${activeProject.title}`}
-                >
-                  <ScanSearch className="h-4 w-4" />
-                </button>
-              </div>
-
-              <div className="relative overflow-hidden rounded-[24px] border border-black/10 bg-[linear-gradient(135deg,rgba(255,255,255,0.98),rgba(244,244,244,0.94))] shadow-[inset_0_1px_0_rgba(255,255,255,0.7)]">
-                <div className="relative aspect-[16/10] min-h-[320px] w-full md:min-h-[460px]">
-                  <AnimatePresence mode="wait">
-                    {activeSlideIndex === 0 ? (
-                      <motion.div
-                        key={`${activeProject.title}-title`}
-                        initial={shouldReduceMotion ? { opacity: 1 } : { opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: -20 }}
-                        transition={{ duration: shouldReduceMotion ? 0.1 : 0.45, ease: 'easeOut' }}
-                        className="absolute inset-0 flex items-center justify-center p-6 text-center md:p-8"
-                      >
-                        <div className="max-w-3xl">
-                          <div
-                            className="project-title-typing"
-                            style={
-                              {
-                                ['--project-title-steps' as string]: `${Math.max(activeProject.title.length, 10)}`,
-                              } as CSSProperties
-                            }
-                          >
-                            <h3 className="project-title-display text-3xl font-black tracking-tight md:text-5xl">{activeProject.title}</h3>
-                          </div>
-                        </div>
-                      </motion.div>
-                    ) : (
-                      <motion.div
-                        key={`${activeProject.title}-${activeSlideIndex}`}
-                        initial={shouldReduceMotion ? { opacity: 1 } : { opacity: 0, scale: 1.015 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, scale: 0.985 }}
-                        transition={{ duration: shouldReduceMotion ? 0.1 : 0.45, ease: 'easeOut' }}
-                        className="absolute inset-0"
-                      >
-                        <Image
-                          src={activeProject.screenshots[activeSlideIndex - 1]}
-                          alt={`${activeProject.title} screenshot ${activeSlideIndex}`}
-                          fill
-                          className="object-contain object-center"
-                          sizes="(max-width: 768px) 100vw, 1200px"
-                        />
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
-              </div>
-
-              <div className="flex flex-col gap-4 border-t border-black/10 bg-[linear-gradient(135deg,rgba(255,255,255,0.94),rgba(242,242,242,0.9))] px-4 py-4 md:flex-row md:items-center md:justify-between md:px-6">
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#111111]/60">{activeProject.type}</p>
-                  <p className="mt-2 text-lg font-semibold text-[#111111] md:text-2xl">{activeProject.title}</p>
-                </div>
-
-                <div className="flex items-center gap-3 self-start md:self-auto">
-                  <div className="rounded-full border border-black/10 bg-white/80 px-3 py-1 text-xs font-medium text-[#111111]/80">
-                    {activeSlideIndex === 0 ? 'Intro' : `${activeSlideIndex} / ${activeProject.screenshots.length}`}
-                  </div>
-                  <div className="flex items-center justify-center gap-2 rounded-full border border-black/10 bg-white/80 px-4 py-2">
-                    {Array.from({ length: totalProjectSlides }).map((_, index) => (
-                      <button
-                        key={`${activeProject.title}-progress-${index}`}
-                        type="button"
-                        onClick={() => setActiveSlideIndex(index)}
-                        className={[
-                          'h-2 rounded-full transition-all',
-                          index === activeSlideIndex ? 'w-10 bg-[#111111]' : 'w-2.5 bg-[#111111]/30 hover:bg-[#111111]/50',
-                        ].join(' ')}
-                        aria-label={`Go to slide ${index + 1} for ${activeProject.title}`}
-                      />
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-6 grid gap-4 md:grid-cols-3">
-            {projects.map((project, index) => (
-              <button
-                key={project.title}
-                type="button"
-                onClick={() => handleProjectSelect(index)}
-                className={[
-                  'relative overflow-hidden rounded-[24px] border border-black/10 bg-[linear-gradient(135deg,rgba(255,255,255,0.96),rgba(242,242,242,0.92))] p-5 text-left shadow-[0_16px_45px_rgba(0,0,0,0.14)] backdrop-blur-sm transition',
-                  index === activeProjectIndex
-                    ? 'border-primary/55 ring-2 ring-primary/20'
-                    : 'border-border/70 hover:-translate-y-1 hover:border-primary/30',
-                ].join(' ')}
-                aria-pressed={index === activeProjectIndex}
-              >
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_rgba(255,255,255,0.95),_transparent_48%)]" />
-                <div className="relative flex items-center justify-between gap-4">
-                  <span className="rounded-full bg-[#0C0C0C]/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#111111]">
-                    {project.type}
-                  </span>
-                  <ArrowUpRight className="h-4 w-4 text-[#111111]/55" />
-                </div>
-                <h3 className="relative mt-4 text-xl font-semibold text-[#111111]">{project.title}</h3>
-                <p className="relative mt-3 text-sm leading-7 text-[#111111]/75">{project.description}</p>
-                <div className="relative mt-4 h-1 w-12 rounded-full bg-gradient-to-r from-[#0C0C0C] to-[#868686]" />
-              </button>
-            ))}
           </div>
         </motion.section>
 
@@ -1049,68 +733,6 @@ export default function Home() {
         </motion.section>
       </main>
 
-      <AnimatePresence>
-        {isMobileModalOpen ? (
-          <motion.div
-            initial={shouldReduceMotion ? { opacity: 1 } : { opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[70] flex items-center justify-center px-5"
-          >
-            <button
-              type="button"
-              aria-label="Close modal backdrop"
-              className="absolute inset-0 bg-black/55 backdrop-blur-sm"
-              onClick={() => setIsMobileModalOpen(false)}
-            />
-
-            <motion.div
-              initial={shouldReduceMotion ? { opacity: 1 } : { opacity: 0, y: 28, scale: 0.98 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: 18, scale: 0.98 }}
-              transition={{ duration: shouldReduceMotion ? 0.1 : 0.28, ease: 'easeOut' }}
-              className="panel-light relative z-10 w-full max-w-md rounded-[28px] border border-border/70 p-5 shadow-[0_32px_100px_rgba(0,0,0,0.3)] md:p-6"
-            >
-              <div className="mb-5 flex items-start justify-between gap-4">
-                <div>
-                  <p className="text-sm font-semibold uppercase tracking-[0.2em] text-primary">View on Mobile</p>
-                  <h3 className="mt-2 text-2xl font-bold text-[#111111]">View on Mobile</h3>
-                  <p className="mt-2 text-sm leading-6 text-[#111111]/75">
-                    Open the active showcase for <span className="font-semibold text-[#111111]">{activeProject.title}</span> on
-                    a mobile device.
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setIsMobileModalOpen(false)}
-                  className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-border/80 bg-white/70 text-[#111111] transition hover:border-primary/40 hover:bg-white dark:bg-black/20"
-                  aria-label="Close mobile modal"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              </div>
-
-              <div className="mx-auto w-full max-w-[280px] rounded-[24px] border border-border/70 bg-white/85 p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.7)] dark:bg-black/10">
-                <div className="grid grid-cols-[repeat(21,minmax(0,1fr))] gap-1 rounded-[18px] bg-[#111111] p-3">
-                  {qrMatrix.flatMap((row, rowIndex) =>
-                    row.map((cell, columnIndex) => (
-                      <div
-                        key={`${rowIndex}-${columnIndex}`}
-                        className={cell ? 'aspect-square rounded-[2px] bg-white' : 'aspect-square rounded-[2px] bg-transparent'}
-                      />
-                    )),
-                  )}
-                </div>
-                <div className="mt-4 text-center">
-                  <p className="text-sm font-semibold text-[#111111]">{activeProject.title}</p>
-                  <p className="mt-1 text-xs uppercase tracking-[0.18em] text-[#111111]/55">{activeProject.type}</p>
-                </div>
-              </div>
-            </motion.div>
-          </motion.div>
-        ) : null}
-      </AnimatePresence>
-
       <footer className="theme-footer relative border-t">
         <div className="mx-auto grid max-w-7xl gap-8 px-5 py-10 md:grid-cols-[1.2fr_0.8fr_0.8fr] md:px-8">
           <div>
@@ -1163,9 +785,6 @@ export default function Home() {
               <a href="#services" className="inline-flex items-center gap-2 transition hover:text-primary">
                 <Sparkles className="h-4 w-4" /> Services
               </a>
-              <button type="button" onClick={handlePortfolioOpen} className="inline-flex items-center gap-2 text-left transition hover:text-primary">
-                <ArrowUpRight className="h-4 w-4" /> Portfolio
-              </button>
               <a href="#why-us" className="inline-flex items-center gap-2 transition hover:text-primary">
                 <ShieldCheck className="h-4 w-4" /> Why Us
               </a>
