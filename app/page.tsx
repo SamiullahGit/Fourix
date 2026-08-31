@@ -550,6 +550,8 @@ export default function Home() {
   const [activeCard, setActiveCard] = useState(0);
   const [cardStep, setCardStep] = useState(CARD_STEP_MAX);
   const cardCount = packageParts.length;
+  const [isMobile, setIsMobile] = useState(false);
+  const mobileRailRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const pinnable = window.matchMedia('(min-width: 1024px) and (pointer: fine)');
@@ -563,6 +565,99 @@ export default function Home() {
       noMotion.removeEventListener('change', sync);
     };
   }, []);
+
+  // The compact carousel is deliberately below md only. Keep the existing
+  // desktop/touch fallback intact at md and above.
+  useEffect(() => {
+    const query = window.matchMedia('(max-width: 767px)');
+    const sync = () => setIsMobile(query.matches);
+    sync();
+    query.addEventListener('change', sync);
+    return () => query.removeEventListener('change', sync);
+  }, []);
+
+  // Native scroll-snap does the movement. This only reflects the centred
+  // snap item in the label, dots, and which chat loop is allowed to play.
+  useEffect(() => {
+    const rail = mobileRailRef.current;
+    if (!isMobile || !rail) return;
+
+    let frame = 0;
+    const updateActiveCard = () => {
+      frame = 0;
+      const cards = Array.from(rail.children) as HTMLElement[];
+      const railCentre = rail.scrollLeft + rail.clientWidth / 2;
+      let nearest = 0;
+      let nearestDistance = Number.POSITIVE_INFINITY;
+      cards.forEach((card, index) => {
+        const cardCentre = card.offsetLeft + card.offsetWidth / 2;
+        const distance = Math.abs(cardCentre - railCentre);
+        if (distance < nearestDistance) {
+          nearest = index;
+          nearestDistance = distance;
+        }
+      });
+      setActiveCard((current) => (current === nearest ? current : nearest));
+    };
+    const onScroll = () => {
+      if (!frame) frame = window.requestAnimationFrame(updateActiveCard);
+    };
+
+    updateActiveCard();
+    rail.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', updateActiveCard);
+    return () => {
+      rail.removeEventListener('scroll', onScroll);
+      window.removeEventListener('resize', updateActiveCard);
+      if (frame) window.cancelAnimationFrame(frame);
+    };
+  }, [isMobile]);
+
+  // Mobile carousel scroll-lock: convert vertical scroll to horizontal movement
+  // until all cards are shown, then release scroll lock.
+  useEffect(() => {
+    const rail = mobileRailRef.current;
+    if (!isMobile || !rail) return;
+
+    const SCROLL_MULTIPLIER = 1.5; // Higher = more responsive carousel movement
+
+    const handleWheel = (e: WheelEvent) => {
+      // Only intercept vertical scroll (deltaY), ignore horizontal
+      if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;
+
+      const maxScroll = rail.scrollWidth - rail.clientWidth;
+      const currentScroll = rail.scrollLeft;
+      
+      // Check if carousel is fully scrolled (at the end)
+      const isAtEnd = currentScroll >= maxScroll - 5; // 5px tolerance
+
+      // Only prevent default scroll if we're not at the end
+      if (!isAtEnd) {
+        e.preventDefault();
+        
+        // Convert vertical scroll to horizontal movement
+        // Use scrollBy for smoother behavior with scroll-snap
+        const scrollDelta = e.deltaY * SCROLL_MULTIPLIER;
+        rail.scrollBy({
+          left: scrollDelta,
+          behavior: 'auto' // Use auto for immediate response to wheel events
+        });
+      }
+    };
+
+    rail.addEventListener('wheel', handleWheel, { passive: false });
+
+    return () => {
+      rail.removeEventListener('wheel', handleWheel);
+    };
+  }, [isMobile]);
+
+  const goToMobileCard = (index: number) => {
+    const rail = mobileRailRef.current;
+    const card = rail?.children[index] as HTMLElement | undefined;
+    if (!rail || !card) return;
+    rail.scrollTo({ left: card.offsetLeft - (rail.clientWidth - card.offsetWidth) / 2, behavior: 'smooth' });
+  };
 
   // One viewport-ish of scroll per card transition, and the horizontal
   // spread that keeps the arc filling the section at any width.
@@ -602,9 +697,9 @@ export default function Home() {
 
 
   /* ---- Hero backdrop: video where it makes sense, else the still ------- *
-   * Skipped entirely when there is no file yet, when motion is reduced
-   * (show the poster instead of autoplaying), and on small screens where
-   * the download is not worth it.
+   * Desktop retains its existing wide-screen choice. Below md, browsers get
+   * a muted inline autoplay attempt above an always-rendered poster layer;
+   * reduced-motion keeps that mobile layer still.
    * ---------------------------------------------------------------------- */
   const [isWideScreen, setIsWideScreen] = useState(false);
   useEffect(() => {
@@ -841,7 +936,7 @@ export default function Home() {
             >
               <div className="flex items-center justify-between border-b pb-4">
                 <div>
-                  <p className="section-eyebrow text-xs font-semibold uppercase tracking-[0.2em]">Menu</p>
+                  <p className="section-eyebrow uppercase tracking-[0.2em]">Menu</p>
                   <p className="mt-2 text-lg font-medium">Navigate Fourix</p>
                 </div>
                 <button
@@ -895,7 +990,42 @@ export default function Home() {
               className="hero-backdrop__layer"
               style={shouldReduceMotion ? undefined : { y: heroImageY, opacity: heroImageOpacity }}
             >
-              {playVideo ? (
+              {isMobile ? (
+                <>
+                  {/* The image paints immediately; the mobile video is only
+                      an enhancement layered on top, never the sole hero. */}
+                  <picture className="hero-backdrop__poster">
+                    <source srcSet={heroBackdrop.webp} type="image/webp" />
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={heroBackdrop.jpg}
+                      alt=""
+                      width={2048}
+                      height={1143}
+                      className="hero-backdrop__media"
+                      style={{ backgroundImage: `url(${heroBackdrop.blur})` }}
+                      fetchPriority="high"
+                      decoding="async"
+                      draggable={false}
+                    />
+                  </picture>
+                  {heroVideo && !shouldReduceMotion ? (
+                    <video
+                      className="hero-backdrop__media hero-backdrop__video"
+                      poster={heroBackdrop.jpg}
+                      autoPlay
+                      muted
+                      loop
+                      playsInline
+                      preload="metadata"
+                      aria-hidden="true"
+                      tabIndex={-1}
+                    >
+                      <source src={heroVideo} type="video/mp4" />
+                    </video>
+                  ) : null}
+                </>
+              ) : playVideo ? (
                 <video
                   className="hero-backdrop__media"
                   poster={heroBackdrop.jpg}
@@ -1013,7 +1143,7 @@ export default function Home() {
               >
                 <motion.p
                   {...revealIn(0)}
-                  className="section-eyebrow text-sm font-medium uppercase tracking-[0.22em]"
+                  className="section-eyebrow uppercase tracking-[0.22em]"
                 >
                   The problem
                 </motion.p>
@@ -1062,7 +1192,7 @@ export default function Home() {
               viewport={{ once: true, amount: 0.4 }}
               transition={{ duration: 0.5, ease: EASE_CINEMATIC }}
             >
-              <p className="section-eyebrow text-sm font-medium uppercase tracking-[0.22em]">What we do</p>
+              <p className="section-eyebrow uppercase tracking-[0.22em]">What we do</p>
               <h2 className="section-display mt-6 max-w-2xl text-4xl font-normal leading-[1.08] md:text-6xl">
                 One system that answers for you.
               </h2>
@@ -1128,6 +1258,40 @@ export default function Home() {
                   ))}
                 </div>
               </div>
+            ) : isMobile ? (
+              <div className="mobile-chat-carousel">
+                <div className="mobile-chat-carousel__copy" aria-live="polite">
+                  <h3 className="section-display text-xl font-medium leading-snug">{packageParts[activeCard].title}</h3>
+                  <p className="section-muted mt-3 text-sm leading-7">{packageParts[activeCard].text}</p>
+                </div>
+                <div ref={mobileRailRef} className="mobile-chat-carousel__rail" aria-label="Automation conversation examples">
+                  {packageParts.map((part, index) => (
+                    <article
+                      key={part.title}
+                      className="mobile-chat-carousel__slide"
+                      aria-label={`${index + 1} of ${cardCount}: ${part.title}`}
+                    >
+                      <ChatThread
+                        messages={part.messages}
+                        label={`Example conversation: ${part.title}`}
+                        paused={index !== activeCard}
+                      />
+                    </article>
+                  ))}
+                </div>
+                <div className="mobile-chat-carousel__dots" aria-label="Choose an automation example">
+                  {packageParts.map((part, index) => (
+                    <button
+                      key={part.title}
+                      type="button"
+                      className={['mobile-chat-carousel__dot', index === activeCard ? 'mobile-chat-carousel__dot--on' : ''].join(' ')}
+                      aria-label={`Show ${part.title}`}
+                      aria-current={index === activeCard ? 'true' : undefined}
+                      onClick={() => goToMobileCard(index)}
+                    />
+                  ))}
+                </div>
+              </div>
             ) : (
               <>
                 <div className="chat-rail-swipe items-end px-5 pb-6 md:px-8">
@@ -1162,7 +1326,7 @@ export default function Home() {
             stages would be invisible rather than dim before they are
             reached. The rows manage their own dim-to-bright. */}
         <section id="how-it-works" className="mx-auto max-w-7xl px-5 py-14 md:px-8 md:py-20">
-          <motion.p {...revealIn(0)} className="section-eyebrow text-sm font-medium uppercase tracking-[0.22em]">
+          <motion.p {...revealIn(0)} className="section-eyebrow uppercase tracking-[0.22em]">
             Delivery
           </motion.p>
           <motion.h2
@@ -1215,7 +1379,7 @@ export default function Home() {
             className="mx-auto max-w-7xl px-5 py-20 md:px-8"
           >
             <div className="mb-10 max-w-3xl">
-              <p className="section-eyebrow text-sm font-semibold uppercase tracking-[0.22em]">Proof</p>
+              <p className="section-eyebrow uppercase tracking-[0.22em]">Proof</p>
               <h2 className="mt-3 text-4xl font-bold md:text-5xl">See it running.</h2>
             </div>
 
@@ -1232,15 +1396,15 @@ export default function Home() {
 
                   <dl className="mt-8 grid gap-8 md:grid-cols-3">
                     <div>
-                      <dt className="section-eyebrow text-xs font-medium uppercase tracking-[0.2em]">The problem</dt>
+                      <dt className="section-eyebrow uppercase tracking-[0.2em]">The problem</dt>
                       <dd className="section-muted mt-3 text-base leading-8">{item.problem}</dd>
                     </div>
                     <div>
-                      <dt className="section-eyebrow text-xs font-medium uppercase tracking-[0.2em]">What we built</dt>
+                      <dt className="section-eyebrow uppercase tracking-[0.2em]">What we built</dt>
                       <dd className="section-muted mt-3 text-base leading-8">{item.built}</dd>
                     </div>
                     <div>
-                      <dt className="section-eyebrow text-xs font-medium uppercase tracking-[0.2em]">Tools used</dt>
+                      <dt className="section-eyebrow uppercase tracking-[0.2em]">Tools used</dt>
                       <dd className="mt-3 flex flex-wrap gap-2">
                         {item.tools.map((tool) => (
                           <span key={tool} className="chip rounded-full px-3 py-1 text-sm">
@@ -1280,7 +1444,7 @@ export default function Home() {
             className="mx-auto max-w-7xl px-5 py-20 md:px-8"
           >
             <div className="mb-10 max-w-3xl">
-              <p className="section-eyebrow text-sm font-semibold uppercase tracking-[0.22em]">About</p>
+              <p className="section-eyebrow uppercase tracking-[0.22em]">About</p>
               <h2 className="mt-3 text-4xl font-bold md:text-5xl">Who you will be working with.</h2>
               <p className="section-muted mt-6 max-w-xl text-base leading-8 md:text-lg">
                 Fourix is a two-person team based in Islamabad. You deal with us directly, from the first call to the monthly
@@ -1307,7 +1471,7 @@ export default function Home() {
                   />
                   <div className="min-w-0">
                     <h3 className="section-display text-xl font-medium">{founder.name}</h3>
-                    <p className="section-eyebrow mt-1.5 text-xs font-medium uppercase tracking-[0.16em]">{founder.role}</p>
+                    <p className="section-eyebrow mt-1.5 uppercase tracking-[0.16em]">{founder.role}</p>
                     <p className="section-muted mt-3.5 text-base leading-8">{founder.bio}</p>
                   </div>
                 </motion.article>
@@ -1322,7 +1486,7 @@ export default function Home() {
          * shared headline scale, hairline rules instead of cards.
          * ---------------------------------------------------------- */}
         <section id="book" className="mx-auto max-w-7xl px-5 pb-28 pt-14 md:px-8 md:pb-40 md:pt-20">
-          <motion.p {...revealIn(0)} className="section-eyebrow text-sm font-medium uppercase tracking-[0.22em]">
+          <motion.p {...revealIn(0)} className="section-eyebrow uppercase tracking-[0.22em]">
             Book a meeting
           </motion.p>
           <motion.h2
@@ -1355,7 +1519,7 @@ export default function Home() {
               href="mailto:contact.fourix@gmail.com"
               className="hairline-top pt-8"
             >
-              <span className="section-eyebrow flex items-center gap-2 text-xs font-medium uppercase tracking-[0.16em]">
+              <span className="contact-label flex items-center gap-2 text-xs font-medium uppercase tracking-[0.16em]">
                 <Mail className="h-4 w-4" /> Email
               </span>
               <span className="section-display mt-4 block text-lg font-normal underline-offset-4 hover:underline md:text-xl">
@@ -1370,7 +1534,7 @@ export default function Home() {
               rel="noreferrer"
               className="hairline-top pt-8"
             >
-              <span className="section-eyebrow flex items-center gap-2 text-xs font-medium uppercase tracking-[0.16em]">
+              <span className="contact-label flex items-center gap-2 text-xs font-medium uppercase tracking-[0.16em]">
                 <MapPin className="h-4 w-4" /> Location
               </span>
               <span className="section-display mt-4 block text-lg font-normal underline-offset-4 hover:underline md:text-xl">

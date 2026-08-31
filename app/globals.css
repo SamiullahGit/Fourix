@@ -178,7 +178,26 @@
 
   /* ---- Typography ------------------------------------------------ */
 
+  /* Eyebrows carry their own size/weight so the two themes stay
+     dimensionally identical — bumping the size in light mode only would
+     reflow the page every time the toggle is pressed. */
   .section-eyebrow {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    line-height: 1.4;
+    color: var(--text-faint);
+  }
+
+  /* Light mode only: amber text. #9a6a1a from the brief measured 4.18:1 —
+     below AA — so this is the richest tone that still clears 4.5:1 at
+     13px/600, which is not WCAG large text. */
+  :root[data-theme='light'] .section-eyebrow {
+    color: #906015;
+  }
+
+  /* Contact field labels keep the muted treatment — their icons inherit
+     currentColor and should not go amber. */
+  .contact-label {
     color: var(--text-faint);
   }
 
@@ -1172,6 +1191,113 @@
   .hero-scroll-cue__text {
     font-size: 0.62rem;
     letter-spacing: 0.2em;
+  }
+}
+
+/* Compact, flat phone carousel. This is intentionally isolated below md:
+   desktop keeps the pinned 3D coverflow and its existing layout unchanged. */
+@media (max-width: 767px) {
+  .hero-backdrop__poster,
+  .hero-backdrop__video {
+    position: absolute;
+    inset: 0;
+  }
+
+  .hero-backdrop__poster {
+    display: block;
+  }
+
+  .hero-backdrop__video {
+    /* The poster remains visible until the browser has a frame to paint. */
+    background: transparent;
+  }
+
+  .mobile-chat-carousel {
+    overflow: hidden;
+    overflow-y: hidden;
+    padding-bottom: 1.5rem;
+  }
+
+  .mobile-chat-carousel__copy {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: var(--bg);
+    min-height: 6.85rem;
+    max-width: 23rem;
+    margin: 0 auto 1.25rem;
+    padding: 1rem 1.25rem;
+    text-align: center;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+
+  .mobile-chat-carousel__rail {
+    display: flex;
+    gap: 1rem;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-snap-type: x mandatory;
+    scroll-padding-inline: 12.5vw;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .mobile-chat-carousel__rail::-webkit-scrollbar {
+    display: none;
+  }
+
+  .mobile-chat-carousel__slide {
+    display: flex;
+    justify-content: center;
+    flex: 0 0 100%;
+    scroll-snap-align: center;
+    scroll-snap-stop: always;
+    padding: 0 1.25rem;
+  }
+
+  .mobile-chat-carousel__slide .phone {
+    height: min(34rem, 75svh);
+    max-height: none;
+    box-shadow: 0 24px 48px rgba(0, 0, 0, 0.42);
+  }
+
+  .mobile-chat-carousel__dots {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.55rem;
+    margin-top: 1.25rem;
+  }
+
+  .mobile-chat-carousel__dot {
+    position: relative;
+    /* Keep the mark small, but give each pagination control a reliable
+       44px touch target (and a normally visible :focus-visible outline). */
+    width: 2.75rem;
+    height: 2.75rem;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+  }
+
+  .mobile-chat-carousel__dot::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 999px;
+    transform: translate(-50%, -50%);
+    background: var(--line-strong);
+    transition: width 0.2s ease, background-color 0.2s ease;
+  }
+
+  .mobile-chat-carousel__dot--on::after {
+    width: 1.35rem;
+    background: var(--text-muted);
   }
 }
 
