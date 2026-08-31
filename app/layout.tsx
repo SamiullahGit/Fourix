@@ -16,23 +16,6 @@ export const metadata: Metadata = {
   title: 'Fourix — AI automation for service businesses',
   description:
     'Fourix builds AI automation for service businesses: missed-call and after-hours booking recovery, automatic reminders that cut no-shows, and follow-up on every new inquiry.',
-  icons: {
-    icon: [
-      {
-        url: '/icon-light-32x32.png',
-        media: '(prefers-color-scheme: light)',
-      },
-      {
-        url: '/icon-dark-32x32.png',
-        media: '(prefers-color-scheme: dark)',
-      },
-      {
-        url: '/icon.svg',
-        type: 'image/svg+xml',
-      },
-    ],
-    apple: '/apple-icon.png',
-  },
 }
 
 export const viewport: Viewport = {

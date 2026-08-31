@@ -183,15 +183,14 @@ const footerSocials = [
     bg: 'bg-[#1877F2]',
     logo: 'https://cdn.simpleicons.org/facebook/ffffff',
   },
-  // LinkedIn is intentionally absent: the live site pointed at a bare
-  // https://linkedin.com, which is a dead link. Restore this entry once the
-  // real company page exists, with the real URL in href:
-  // {
-  //   name: 'LinkedIn',
-  //   href: 'https://www.linkedin.com/company/REAL-COMPANY-SLUG',
-  //   bg: 'bg-[#0A66C2]',
-  //   logo: 'https://cdn.simpleicons.org/linkedin/ffffff',
-  // },
+  {
+    name: 'LinkedIn',
+    href: 'https://www.linkedin.com/company/fourix-ai/',
+    bg: 'bg-[#0A66C2]',
+    // Local, not cdn.simpleicons.org: that CDN 404s for linkedin since the
+    // brand was dropped from the set, which showed a broken-image icon.
+    logo: '/logo-linkedin.svg',
+  },
   {
     name: 'Instagram',
     href: 'https://www.instagram.com/fourix.ai?igsh=MzY5eTF2ZDk0OHg4',
@@ -882,7 +881,7 @@ export default function Home() {
             <div className="flex items-center justify-between gap-3">
               <a href="#home" className="flex min-w-0 items-center gap-3">
                 <Image
-                  src="/2.png"
+                  src="/Iccon.png"
                   alt="Fourix logo"
                   width={64}
                   height={64}
@@ -1604,7 +1603,7 @@ export default function Home() {
           <div>
             <div className="flex items-center gap-3">
               <Image
-                src="/2.png"
+                src="/Iccon.png"
                 alt="Fourix logo"
                 width={48}
                 height={48}
