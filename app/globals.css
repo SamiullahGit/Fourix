@@ -2,40 +2,118 @@
 @import 'tw-animate-css';
 @import 'shadcn/tailwind.css';
 
-@custom-variant dark (&:is(.dark *));
+@custom-variant dark (&:is([data-theme='dark'] *));
 
+/* ==================================================================== *
+ * ONE THEME SYSTEM
+ *
+ * Every colour on the page comes from the variables below. Sections do
+ * NOT define their own light/dark colours and do not hardcode hex values
+ * for background or text — they read var(--bg), var(--text), etc.
+ *
+ * Flipping data-theme on <html> therefore flips the whole page at once.
+ *
+ * The only exceptions are the two intentional always-dark stages (the
+ * hero, over the dark video, and the chat section). Those use .stage-dark,
+ * which re-declares the SAME variable names with fixed dark values — so
+ * their children keep reading the same vocabulary and stay legible in
+ * both themes on purpose, not by accident.
+ * ==================================================================== */
+
+:root,
+:root[data-theme='light'] {
+  color-scheme: light;
+
+  --bg: #f3f1ec;
+  --surface: #ffffff;
+  --surface-2: #eae6dd;
+  --text: #111111;
+  --text-muted: rgba(17, 17, 17, 0.68);
+  --text-faint: rgba(17, 17, 17, 0.6);
+  --line: rgba(17, 17, 17, 0.16);
+  --line-strong: rgba(17, 17, 17, 0.28);
+
+  /* Primary CTA: maximum contrast against the current surface. */
+  --pill: #111111;
+  --pill-ink: #ffffff;
+  --pill-hover: #2a2721;
+
+  --focus: #111111;
+  --wordmark-filter: invert(1);
+  /* #eab464 measures 1.66:1 on cream, so light mode needs a deeper amber. */
+  --rail-accent: #8a5a12;
+  --rail-track: rgba(17, 17, 17, 0.1);
+  /* Nav hover pill: subtle dark wash on the light header. */
+  --nav-pill: rgba(17, 17, 17, 0.07);
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+
+  --bg: #050505;
+  --surface: #0e0e0e;
+  --surface-2: #171717;
+  --text: #fafafa;
+  --text-muted: rgba(255, 255, 255, 0.64);
+  --text-faint: rgba(255, 255, 255, 0.56);
+  --line: rgba(255, 255, 255, 0.13);
+  --line-strong: rgba(255, 255, 255, 0.24);
+
+  --pill: #ffffff;
+  --pill-ink: #050505;
+  --pill-hover: #ededed;
+
+  --focus: #ffffff;
+  --wordmark-filter: none;
+  --rail-accent: #eab464;
+  --rail-track: rgba(255, 255, 255, 0.08);
+  --nav-pill: rgba(255, 255, 255, 0.1);
+}
+
+/* Always-dark stage. Same variable names, fixed dark values, so anything
+   nested inside stays legible whichever theme the page is in. */
+.stage-dark {
+  --bg: #050505;
+  --surface: #0e0e0e;
+  --surface-2: #171717;
+  --text: #fafafa;
+  --text-muted: rgba(255, 255, 255, 0.64);
+  --text-faint: rgba(255, 255, 255, 0.56);
+  --line: rgba(255, 255, 255, 0.13);
+  --line-strong: rgba(255, 255, 255, 0.24);
+  --pill: #ffffff;
+  --pill-ink: #050505;
+  --pill-hover: #ededed;
+  --focus: #ffffff;
+  --wordmark-filter: none;
+  --rail-accent: #eab464;
+  --rail-track: rgba(255, 255, 255, 0.08);
+  --nav-pill: rgba(255, 255, 255, 0.1);
+
+  color: var(--text);
+}
+
+/* Bridge the shadcn token names onto the system above, so any shadcn
+   component keeps working and flips with the theme too. */
 @theme inline {
-  --color-sidebar-ring: var(--sidebar-ring);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar: var(--sidebar);
-  --color-chart-5: var(--chart-5);
-  --color-chart-4: var(--chart-4);
-  --color-chart-3: var(--chart-3);
-  --color-chart-2: var(--chart-2);
-  --color-chart-1: var(--chart-1);
-  --color-ring: var(--ring);
-  --color-input: var(--input);
-  --color-border: var(--border);
-  --color-destructive: var(--destructive);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-accent: var(--accent);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-muted: var(--muted);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-secondary: var(--secondary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-primary: var(--primary);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-popover: var(--popover);
-  --color-card-foreground: var(--card-foreground);
-  --color-card: var(--card);
-  --color-foreground: var(--foreground);
-  --color-background: var(--background);
+  --color-background: var(--bg);
+  --color-foreground: var(--text);
+  --color-card: var(--surface);
+  --color-card-foreground: var(--text);
+  --color-popover: var(--surface);
+  --color-popover-foreground: var(--text);
+  --color-primary: var(--pill);
+  --color-primary-foreground: var(--pill-ink);
+  --color-secondary: var(--surface-2);
+  --color-secondary-foreground: var(--text);
+  --color-muted: var(--surface-2);
+  --color-muted-foreground: var(--text-muted);
+  --color-accent: var(--surface-2);
+  --color-accent-foreground: var(--text);
+  --color-destructive: #b3452b;
+  --color-border: var(--line);
+  --color-input: var(--line);
+  --color-ring: var(--focus);
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -46,187 +124,35 @@
 }
 
 :root {
-  color-scheme: light;
-  --background: #F3F1EC;
-  --foreground: #111111;
-  --card: #FFFFFF;
-  --card-foreground: #111111;
-  --popover: #FFFFFF;
-  --popover-foreground: #111111;
-  --primary: #111111;
-  --primary-foreground: #FFFFFF;
-  --secondary: #E5E0D5;
-  --secondary-foreground: #111111;
-  --muted: #D3CCBE;
-  --muted-foreground: #5F5A52;
-  --accent: #7D7465;
-  --accent-foreground: #FFFFFF;
-  --destructive: #8B5E3C;
-  --border: rgba(17, 17, 17, 0.14);
-  --input: rgba(17, 17, 17, 0.06);
-  --ring: #7D7465;
-  --chart-1: #111111;
-  --chart-2: #5F5A52;
-  --chart-3: #7D7465;
-  --chart-4: #D3CCBE;
-  --chart-5: #FFFFFF;
   --radius: 0.625rem;
-  --sidebar: #F6F2E9;
-  --sidebar-foreground: #111111;
-  --sidebar-primary: #111111;
-  --sidebar-primary-foreground: #FFFFFF;
-  --sidebar-accent: #D3CCBE;
-  --sidebar-accent-foreground: #111111;
-  --sidebar-border: rgba(17, 17, 17, 0.14);
-  --sidebar-ring: #7D7465;
-}
-
-.light {
-  color-scheme: light;
-  --background: #F3F1EC;
-  --foreground: #111111;
-  --card: #FFFFFF;
-  --card-foreground: #111111;
-  --popover: #FFFFFF;
-  --popover-foreground: #111111;
-  --primary: #111111;
-  --primary-foreground: #FFFFFF;
-  --secondary: #E5E0D5;
-  --secondary-foreground: #111111;
-  --muted: #D3CCBE;
-  --muted-foreground: #5F5A52;
-  --accent: #7D7465;
-  --accent-foreground: #FFFFFF;
-  --destructive: #8B5E3C;
-  --border: rgba(17, 17, 17, 0.14);
-  --input: rgba(17, 17, 17, 0.06);
-  --ring: #7D7465;
-  --chart-1: #111111;
-  --chart-2: #5F5A52;
-  --chart-3: #7D7465;
-  --chart-4: #D3CCBE;
-  --chart-5: #FFFFFF;
-  --radius: 0.625rem;
-  --sidebar: #F6F2E9;
-  --sidebar-foreground: #111111;
-  --sidebar-primary: #111111;
-  --sidebar-primary-foreground: #FFFFFF;
-  --sidebar-accent: #D3CCBE;
-  --sidebar-accent-foreground: #111111;
-  --sidebar-border: rgba(17, 17, 17, 0.14);
-  --sidebar-ring: #7D7465;
-}
-
-.dark {
-  color-scheme: dark;
-  --background: #050505;
-  --foreground: #FFFFFF;
-  --card: #D5D5D5;
-  --card-foreground: #111111;
-  --popover: #4D4D4D;
-  --popover-foreground: #FFFFFF;
-  --primary: #4D4D4D;
-  --primary-foreground: #FFFFFF;
-  --secondary: #BABABA;
-  --secondary-foreground: #111111;
-  --muted: #868686;
-  --muted-foreground: #D5D5D5;
-  --accent: #868686;
-  --accent-foreground: #111111;
-  --destructive: #8B5E3C;
-  --border: rgba(255, 255, 255, 0.14);
-  --input: rgba(255, 255, 255, 0.08);
-  --ring: #868686;
-  --chart-1: #0C0C0C;
-  --chart-2: #4D4D4D;
-  --chart-3: #868686;
-  --chart-4: #BABABA;
-  --chart-5: #D5D5D5;
-  --sidebar: #111111;
-  --sidebar-foreground: #FFFFFF;
-  --sidebar-primary: #4D4D4D;
-  --sidebar-primary-foreground: #FFFFFF;
-  --sidebar-accent: #868686;
-  --sidebar-accent-foreground: #111111;
-  --sidebar-border: rgba(255, 255, 255, 0.14);
-  --sidebar-ring: #868686;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root:not(.light) {
-    color-scheme: dark;
-    --background: #050505;
-    --foreground: #FFFFFF;
-    --card: #D5D5D5;
-    --card-foreground: #111111;
-    --popover: #4D4D4D;
-    --popover-foreground: #FFFFFF;
-    --primary: #4D4D4D;
-    --primary-foreground: #FFFFFF;
-    --secondary: #BABABA;
-    --secondary-foreground: #111111;
-    --muted: #868686;
-    --muted-foreground: #D5D5D5;
-    --accent: #868686;
-    --accent-foreground: #111111;
-    --destructive: #8B5E3C;
-    --border: rgba(255, 255, 255, 0.14);
-    --input: rgba(255, 255, 255, 0.08);
-    --ring: #868686;
-    --chart-1: #0C0C0C;
-    --chart-2: #4D4D4D;
-    --chart-3: #868686;
-    --chart-4: #BABABA;
-    --chart-5: #D5D5D5;
-    --sidebar: #111111;
-    --sidebar-foreground: #FFFFFF;
-    --sidebar-primary: #4D4D4D;
-    --sidebar-primary-foreground: #FFFFFF;
-    --sidebar-accent: #868686;
-    --sidebar-accent-foreground: #111111;
-    --sidebar-border: rgba(255, 255, 255, 0.14);
-    --sidebar-ring: #868686;
-  }
 }
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    border-color: var(--line);
   }
+
   body {
-    background: var(--background);
-    color: var(--foreground);
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
+    font-synthesis-weight: none;
+    transition: background-color 0.35s ease, color 0.35s ease;
   }
-  
+
   html {
     scroll-behavior: smooth;
+    /* the header floats over the hero, so anchored sections need clearance */
+    scroll-padding-top: 5.5rem;
   }
 }
 
+/* ==================================================================== *
+ * Components
+ * ==================================================================== */
+
 @layer utilities {
-  .theme-light {
-    color: #111111;
-  }
-
-  .theme-dark {
-    color: #ffffff;
-  }
-
-  .theme-ambient-primary {
-    background: rgba(134, 134, 134, 0.3);
-  }
-
-  .theme-ambient-secondary {
-    background: rgba(77, 77, 77, 0.35);
-  }
-
-  .theme-ambient-tertiary {
-    background: rgba(12, 12, 12, 0.4);
-  }
-
-  .theme-ambient-overlay {
-    background: radial-gradient(circle at top, rgba(255, 255, 255, 0.12), transparent 45%);
-  }
+  /* ---- Brand lockup --------------------------------------------- */
 
   .fourix-wordmark {
     display: inline-flex;
@@ -241,161 +167,291 @@
     height: 100%;
     max-width: none;
     transform: translateX(-0.18rem);
+    /* the source art is white; invert it only on a light surface */
+    filter: var(--wordmark-filter, none);
   }
 
-  .project-title-typing {
-    display: inline-block;
-    position: relative;
-    max-width: 100%;
+  .fourix-wordmark--lg {
+    width: 8.5rem;
+    height: 2.9rem;
   }
 
-  .project-title-typing h3 {
-    display: inline-block;
+  /* ---- Typography ------------------------------------------------ */
+
+  .section-eyebrow {
+    color: var(--text-faint);
+  }
+
+  .section-display {
+    color: var(--text);
+    letter-spacing: -0.03em;
+    text-wrap: balance;
+  }
+
+  .section-muted {
+    color: var(--text-muted);
+    text-wrap: pretty;
+  }
+
+  .quiet-note {
+    color: var(--text-faint);
+  }
+
+  .rule-index {
+    /* these numerals are content, so they need the 4.5:1 text ratio */
+    color: var(--text-faint);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .hairline-top {
+    border-top: 1px solid var(--line);
+  }
+
+  /* ---- Buttons --------------------------------------------------- */
+
+  /* The one primary CTA style — header, hero and contact all use it. */
+  .cta-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    border-radius: 999px;
+    background: var(--pill);
+    color: var(--pill-ink);
+    font-weight: 500;
     white-space: nowrap;
-    max-width: none;
-    clip-path: inset(0 100% 0 0);
-    animation: project-title-reveal 1.6s steps(var(--project-title-steps), end) forwards;
+    box-shadow: 0 14px 34px rgba(0, 0, 0, 0.22);
+    transition: transform 0.25s ease, background-color 0.25s ease;
   }
 
-  .project-title-display {
-    background-image: linear-gradient(135deg, #111111 0%, #7d7465 28%, #c28a2e 56%, #111111 100%);
-    background-size: 200% 200%;
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-    text-shadow: 0 10px 30px rgba(125, 116, 101, 0.12);
-    letter-spacing: -0.04em;
-    animation: project-title-shimmer 6s ease-in-out infinite;
+  .cta-pill:hover {
+    background: var(--pill-hover);
+    transform: translateY(-1px) scale(1.015);
   }
 
-  .project-title-typing::after {
-    content: "";
-    position: absolute;
-    top: 8%;
-    bottom: 8%;
-    right: -0.08rem;
-    width: 0.08rem;
-    background: rgba(17, 17, 17, 0.9);
-    animation: project-title-caret 0.8s step-end 2, project-title-caret-hide 0s linear 1.7s forwards;
+  .cta-pill:active {
+    transform: translateY(0) scale(0.995);
   }
 
+  .cta-ghost {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    color: var(--text-muted);
+    font-weight: 500;
+    transition: color 0.25s ease;
+  }
+
+  .cta-ghost:hover {
+    color: var(--text);
+  }
+
+  /* Compact, quiet icon control. */
   .theme-toggle {
-    border-color: var(--border);
-    background: color-mix(in srgb, var(--card) 78%, transparent);
-    color: var(--foreground);
-    box-shadow: 0 14px 34px rgba(0, 0, 0, 0.12);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: color 0.25s ease, border-color 0.25s ease, background-color 0.25s ease;
   }
 
-  .nav-cta {
-    background: rgba(255, 255, 255, 0.94);
-    color: #111111;
-    box-shadow: 0 14px 34px rgba(0, 0, 0, 0.2);
+  .theme-toggle:hover {
+    color: var(--text);
+    border-color: var(--line-strong);
+    background: color-mix(in srgb, var(--text) 8%, transparent);
   }
 
-  .nav-cta:hover {
-    background: #ffffff;
+  .skip-link {
+    position: absolute;
+    left: 1rem;
+    top: -100%;
+    z-index: 100;
+    border-radius: 999px;
+    background: var(--pill);
+    color: var(--pill-ink);
+    padding: 0.65rem 1.15rem;
+    font-size: 0.875rem;
+    font-weight: 600;
   }
 
-  .hero-pill {
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    background: rgba(255, 255, 255, 0.1);
+  .skip-link:focus-visible {
+    top: 1rem;
+  }
+
+  /* ---- Header ---------------------------------------------------- */
+
+  .site-header {
+    border-bottom: 1px solid transparent;
+    /* 0.25s so the background swap keeps pace with the 0.2s text-colour
+       transition; a slower fade leaves a beat of dark text on a
+       still-translucent bar. */
+    transition: background-color 0.25s ease, border-color 0.25s ease;
+  }
+
+  /* Over the dark hero: fixed light-on-dark values, stated explicitly.
+     This used to reuse .stage-dark, which redefined EVERY token for the
+     header subtree (--pill, --line, --wordmark-filter, --nav-pill...).
+     That made the light-mode failure hard to trace, because one class was
+     silently deciding a dozen colours. Only the four things that actually
+     sit over the hero are set here. */
+  .site-header--over-hero {
+    background: transparent;
+    --wordmark-filter: none;
+  }
+
+  .site-header--over-hero .nav-links a {
+    color: rgba(255, 255, 255, 0.72);
+  }
+
+  .site-header--over-hero .nav-links a:hover,
+  .site-header--over-hero .nav-links a:focus-visible {
     color: #ffffff;
+    background: rgba(255, 255, 255, 0.12);
+  }
+
+  .site-header--over-hero .theme-toggle {
+    color: rgba(255, 255, 255, 0.72);
+    border-color: rgba(255, 255, 255, 0.18);
+  }
+
+  .site-header--over-hero .theme-toggle:hover {
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.12);
+  }
+
+  /* The CTA keeps its white pill over the dark hero in both themes. */
+  .site-header--over-hero .cta-pill {
+    background: #ffffff;
+    color: #050505;
+  }
+
+  .site-header--over-hero .cta-pill:hover {
+    background: #ededed;
+  }
+
+  /* Scrolled past the hero: picks up the page surface, flips with theme. */
+  .site-header--solid {
+    background: color-mix(in srgb, var(--bg) 84%, transparent);
+    border-bottom-color: var(--line);
+    backdrop-filter: blur(18px);
+  }
+
+  /* Padding lives on the link permanently, so the pill only fills space
+     that is already reserved — hovering never moves anything. */
+  .nav-links a {
+    border-radius: 999px;
+    padding: 0.5rem 0.875rem;
+    color: var(--text-muted);
+    background: transparent;
+    transition: color 0.2s ease, background-color 0.2s ease;
+  }
+
+  .nav-links a:hover,
+  .nav-links a:focus-visible {
+    color: var(--text);
+    background: var(--nav-pill);
+  }
+
+  /* Mobile drawer: same idea, matching the drawer's larger radius. */
+  .nav-drawer-link {
+    transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
+  }
+
+  .nav-drawer-link:hover,
+  .nav-drawer-link:focus-visible {
+    color: var(--text);
+    background: var(--nav-pill);
+    border-color: var(--line-strong);
+  }
+
+  /* ---- Hero stage ------------------------------------------------ */
+
+  .hero-stage {
+    position: relative;
+    isolation: isolate;
+    background: #050505;
+  }
+
+  .hero-backdrop {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    overflow: hidden;
+    background: #050505;
+  }
+
+  .hero-backdrop__layer {
+    position: absolute;
+    inset: -6% 0;
+    will-change: transform, opacity;
+  }
+
+  .hero-backdrop__media {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: 38% 50%;
+    background-size: cover;
+    background-position: 38% 50%;
+    display: block;
+  }
+
+  /* Soft centred scrim under the centred copy.
+     Measured against the region the centred text covers (32.5-67.5% x,
+     28-72% y): p95 158, p99 207 (the monitor's lit screen). 0.56 clears AA
+     even over that p99 hotspot — headline 6.22:1, subhead 5.01:1.
+     Soft-edged ellipse, not a black box. */
+  .hero-backdrop__scrim {
+    position: absolute;
+    inset: 0;
+  }
+
+  .hero-backdrop__scrim--center {
+    background: radial-gradient(
+      ellipse 70% 54% at 50% 46%,
+      rgba(5, 5, 5, 0.56) 0%,
+      rgba(5, 5, 5, 0.48) 40%,
+      rgba(5, 5, 5, 0.26) 70%,
+      rgba(5, 5, 5, 0) 100%
+    );
+  }
+
+  /* Melts the backdrop into black so the next section joins seamlessly. */
+  .hero-backdrop__fade {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      to bottom,
+      rgba(5, 5, 5, 0.55) 0%,
+      rgba(5, 5, 5, 0.12) 22%,
+      rgba(5, 5, 5, 0.34) 60%,
+      rgba(5, 5, 5, 0.86) 88%,
+      #050505 100%
+    );
+  }
+
+  .hero-eyebrow {
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    background: rgba(255, 255, 255, 0.06);
+    color: rgba(250, 250, 250, 0.88);
   }
 
   .hero-title {
-    color: #ffffff;
+    color: var(--text);
+    letter-spacing: -0.028em;
+    text-wrap: balance;
   }
 
-  .hero-title-typing {
-    position: relative;
-    display: block;
-    width: 100%;
-    text-align: center;
-  }
-
-  .hero-title-typing__copy {
-    visibility: hidden;
-  }
-
-  .hero-title-typing__copy,
-  .hero-title-typing__overlay {
-    display: block;
-  }
-
-  .hero-title-typing__overlay {
-    position: absolute;
-    inset: 0;
-    color: inherit;
-  }
-
-  .hero-title-typing__line {
-    display: block;
-    position: relative;
-    overflow: hidden;
-    white-space: nowrap;
-    width: fit-content;
-    max-width: 100%;
-    padding-right: 0.16em;
-    padding-bottom: 0.12em;
-    will-change: clip-path;
-    clip-path: inset(-0.08em 50% -0.12em 50%);
-    margin-inline: auto;
-  }
-
-  .hero-title-typing__line::after {
-    content: "";
-    position: absolute;
-    top: 10%;
-    bottom: 10%;
-    right: -0.12em;
-    width: 0.08rem;
-    background: currentColor;
-    box-shadow: 0 0 10px rgba(255, 255, 255, 0.28);
-    opacity: 0;
-  }
-
-  .hero-title-typing__line--first {
-    animation: hero-title-line-1 4.6s steps(var(--hero-title-steps-1), end) forwards;
-  }
-
-  .hero-title-typing__line--first::after {
-    animation: hero-title-caret-1 4.6s step-end forwards;
-  }
-
-  .hero-title-typing__line--second {
-    animation: hero-title-line-2 4.6s steps(var(--hero-title-steps-2), end) forwards;
-  }
-
-  .hero-title-typing__line--second::after {
-    animation: hero-title-caret-2 4.6s step-end forwards;
-  }
-
-  .hero-title__accent {
-    background-image: linear-gradient(to right, #ffffff, #d5d5d5, #ffffff);
-  }
-
+  /* Brighter than the page --text-muted (0.64), which measures 4.35:1 over
+     the scrimmed centre of the backdrop and fails AA. 0.82 gives 5.95:1. */
   .hero-copy {
-    color: rgba(255, 255, 255, 0.8);
-  }
-
-  .hero-button {
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    background: rgba(255, 255, 255, 0.1);
-    color: #ffffff;
-  }
-
-  .hero-button:hover {
-    border-color: rgba(255, 255, 255, 0.4);
-    background: rgba(255, 255, 255, 0.15);
-  }
-
-  .hero-chip-group {
-    color: rgba(255, 255, 255, 0.8);
-  }
-
-  .hero-chip {
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    background: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.82);
+    text-wrap: pretty;
   }
 
   .hero-scroll-cue {
@@ -406,426 +462,634 @@
     align-items: center;
     gap: 0.85rem;
     transform: translateX(-50%);
-    color: rgba(255, 255, 255, 0.44);
+    color: var(--text-faint);
     pointer-events: none;
   }
 
   .hero-scroll-cue__line {
     width: 4.5rem;
     height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.18), transparent);
+    background: linear-gradient(90deg, transparent, var(--line-strong), transparent);
   }
 
   .hero-scroll-cue__text {
     font-size: 0.68rem;
-    font-weight: 600;
+    font-weight: 500;
     letter-spacing: 0.26em;
     text-transform: uppercase;
     white-space: nowrap;
   }
 
-  .cta-copy {
-    color: rgba(255, 255, 255, 0.8);
+  /* ---- Surfaces (proof / team / contact) ------------------------- */
+
+  .surface-card {
+    background: color-mix(in srgb, var(--text) 4%, transparent);
+    border: 1px solid var(--line);
+    color: var(--text);
   }
 
-  .cta-pill {
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    background: rgba(255, 255, 255, 0.1);
-    color: rgba(255, 255, 255, 0.8);
+  .surface-panel {
+    background: color-mix(in srgb, var(--text) 5%, transparent);
+    border: 1px solid var(--line);
+    color: var(--text);
   }
 
-  .portfolio-intro {
-    color: rgba(255, 255, 255, 0.82);
+  .chip {
+    border: 1px solid var(--line);
+    background: color-mix(in srgb, var(--text) 5%, transparent);
+    color: var(--text-muted);
   }
 
-  .contact-card {
-    border-color: rgba(17, 17, 17, 0.1);
-    background: rgba(255, 255, 255, 0.72);
-  }
+  /* ---- Footer ---------------------------------------------------- */
 
-  .contact-label {
-    color: rgba(17, 17, 17, 0.92);
-  }
-
-  .contact-value {
-    color: rgba(17, 17, 17, 0.76);
-  }
-
-  .theme-footer {
-    border-color: rgba(255, 255, 255, 0.1);
-    background: linear-gradient(135deg, #050505 0%, #0B0B0B 55%, #141414 100%);
+  .site-footer {
+    border-top: 1px solid var(--line);
+    background: color-mix(in srgb, var(--text) 3%, transparent);
+    color: var(--text);
   }
 
   .footer-copy,
-  .footer-links {
-    color: rgba(255, 255, 255, 0.7);
+  .footer-links a {
+    color: var(--text-muted);
+  }
+
+  .footer-links a:hover {
+    color: var(--text);
+  }
+
+  .footer-heading {
+    color: var(--text);
   }
 
   .footer-divider {
-    border-color: rgba(255, 255, 255, 0.1);
+    border-top: 1px solid var(--line);
   }
 
-  .panel-dark {
-    background-image: linear-gradient(135deg, #050505 0%, #0C0C0C 55%, #202020 100%);
-    color: #ffffff;
+  /* ---- Phone-framed chat threads --------------------------------- *
+   * A realistic phone shell wrapping the live conversation. Everything
+   * except the message reveal is static: status bar, header and input
+   * bar never animate and never take focus.
+   * ---------------------------------------------------------------- */
+
+  .phone {
+    /* Sized by height so it always fits the viewport; width follows the
+       9:19.5 portrait ratio, so it never stretches.
+       250px = 88px of fixed site header + 138px of caption/dots chrome
+       (h-24 caption + mb-5 + mt-4 dots) + 24px of slack, so the caption clears the header and nothing spills
+       out of the pinned frame. Do not shrink this below ~250 or the
+       caption slides back under the header. */
+    height: min(54rem, calc(100vh - 250px));
+    aspect-ratio: 9 / 19.5;
+    padding: 0.5rem;
+    border-radius: 2.6rem;
+    background: linear-gradient(165deg, #2b2b2e, #121214 42%, #232326);
+    box-shadow:
+      0 2px 0 rgba(255, 255, 255, 0.09) inset,
+      0 40px 90px rgba(0, 0, 0, 0.55);
+    flex: none;
   }
 
-  .panel-light {
-    background-image: linear-gradient(135deg, #AAAAAA 0%, #BABABA 50%, #D5D5D5 100%);
-    color: #111111;
+  .phone__screen {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+    border-radius: 2.15rem;
+    background: #0a0a0b;
+    color: #f5f5f7;
   }
 
-  .gradient-text {
-    @apply bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent;
+  /* ---- Status bar ---- */
+
+  .phone__status {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.7rem 1.2rem 0.35rem;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    color: rgba(255, 255, 255, 0.92);
+    flex: none;
   }
-  
-  .fade-in {
-    animation: fadeIn 0.6s ease-in;
+
+  .phone__glyphs {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.32rem;
+    color: rgba(255, 255, 255, 0.9);
   }
-  
-  .fade-in-up {
-    animation: fadeInUp 0.8s ease-out forwards;
-    opacity: 0;
+
+  .phone__glyphs svg {
+    height: 0.62rem;
+    width: auto;
+    display: block;
   }
-  
-  .slide-in-left {
-    animation: slideInLeft 0.8s ease-out forwards;
-    opacity: 0;
+
+  /* ---- Conversation header ---- */
+
+  .phone__header {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    padding: 0.55rem 1rem 0.75rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.09);
+    flex: none;
   }
-  
-  .slide-in-right {
-    animation: slideInRight 0.8s ease-out forwards;
-    opacity: 0;
+
+  .phone__chevron {
+    width: 1.15rem;
+    height: 1.15rem;
+    flex: none;
+    color: rgba(255, 255, 255, 0.75);
   }
-  
-  .scale-in {
-    animation: scaleIn 0.8s ease-out forwards;
-    opacity: 0;
+
+  .phone__title {
+    display: block;
+    font-size: 0.86rem;
+    font-weight: 600;
+    line-height: 1.25;
+    color: #f5f5f7;
   }
-  
-  .rotate-in {
-    animation: rotateIn 0.8s ease-out forwards;
-    opacity: 0;
+
+  .phone__subtitle {
+    display: block;
+    font-size: 0.66rem;
+    line-height: 1.3;
+    color: rgba(255, 255, 255, 0.55);
   }
-  
-  @keyframes fadeIn {
+
+  .phone__menu {
+    width: 1.05rem;
+    height: 1.05rem;
+    flex: none;
+    color: rgba(255, 255, 255, 0.55);
+  }
+
+  /* ---- Thread ---- */
+
+  .phone__thread {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    gap: 0.5rem;
+    overflow-y: auto;
+    /* overflow-y:auto makes overflow-x compute to auto; the bubble tails
+       sit 5px outside their box, so pin the x axis to avoid a stray
+       horizontal scrollbar inside the phone. */
+    overflow-x: hidden;
+    padding: 0.9rem 0.85rem 0.6rem;
+    scrollbar-width: none;
+  }
+
+  .phone__thread::-webkit-scrollbar {
+    display: none;
+  }
+
+  .chat-daypill {
+    align-self: center;
+    margin-bottom: 0.35rem;
+    padding: 0.2rem 0.7rem;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.08);
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.62rem;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    flex: none;
+  }
+
+  /* ---- Bubbles ---- */
+
+  .chat-bubble {
+    position: relative;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    max-width: 84%;
+    padding: 0.55rem 0.72rem;
+    border-radius: 18px;
+    font-size: 0.79rem;
+    line-height: 1.5;
+    flex: none;
+    animation: chat-bubble-in 0.32s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .chat-bubble__body {
+    min-width: 0;
+  }
+
+  /* Business — dark charcoal, left, tail bottom-left */
+  .chat-bubble--business {
+    align-self: flex-start;
+    background: #1c1c1e;
+    color: rgba(255, 255, 255, 0.94);
+    border-bottom-left-radius: 6px;
+  }
+
+  .chat-bubble--business::after {
+    content: '';
+    position: absolute;
+    left: -5px;
+    bottom: 0;
+    width: 12px;
+    height: 12px;
+    background: #1c1c1e;
+    -webkit-mask: radial-gradient(circle 12px at 0 0, transparent 98%, #000 100%);
+    mask: radial-gradient(circle 12px at 0 0, transparent 98%, #000 100%);
+  }
+
+  /* Customer — soft warm amber, right, tail bottom-right, DARK text */
+  .chat-bubble--customer {
+    align-self: flex-end;
+    background: #eab464;
+    color: #1a1207;
+    border-bottom-right-radius: 6px;
+  }
+
+  .chat-bubble--customer::after {
+    content: '';
+    position: absolute;
+    right: -5px;
+    bottom: 0;
+    width: 12px;
+    height: 12px;
+    background: #eab464;
+    -webkit-mask: radial-gradient(circle 12px at 100% 0, transparent 98%, #000 100%);
+    mask: radial-gradient(circle 12px at 100% 0, transparent 98%, #000 100%);
+  }
+
+  /* Key phrase emphasis inside a business message. */
+  .chat-accent {
+    color: #eab464;
+    font-weight: 600;
+  }
+
+  .chat-bubble__glyph {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.35rem;
+    height: 1.35rem;
+    margin-top: 0.1rem;
+    border-radius: 999px;
+    background: rgba(234, 180, 100, 0.16);
+    color: #eab464;
+    flex: none;
+  }
+
+  .chat-bubble__glyph svg {
+    width: 0.78rem;
+    height: 0.78rem;
+  }
+
+  .chat-meta {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.25rem;
+    margin-top: 0.25rem;
+    font-size: 0.6rem;
+    letter-spacing: 0.04em;
+    /* 0.55 not 0.42: timestamps are text and need the 4.5:1 ratio. */
+    color: rgba(255, 255, 255, 0.55);
+  }
+
+  .chat-bubble--customer .chat-meta {
+    color: rgba(26, 18, 7, 0.78);
+  }
+
+  .chat-receipt {
+    width: 0.72rem;
+    height: 0.5rem;
+  }
+
+  /* ---- Typing indicator ---- */
+
+  .chat-typing {
+    align-self: flex-start;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.24rem;
+    background: #1c1c1e;
+    border-radius: 18px;
+    border-bottom-left-radius: 6px;
+    padding: 0.7rem 0.85rem;
+    flex: none;
+    animation: chat-bubble-in 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .chat-typing i {
+    width: 0.33rem;
+    height: 0.33rem;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.6);
+    animation: chat-dot 1.25s ease-in-out infinite;
+  }
+
+  .chat-typing i:nth-child(2) {
+    animation-delay: 0.18s;
+  }
+
+  .chat-typing i:nth-child(3) {
+    animation-delay: 0.36s;
+  }
+
+  @keyframes chat-bubble-in {
     from {
       opacity: 0;
-    }
-    to {
-      opacity: 1;
-    }
-  }
-  
-  @keyframes fadeInUp {
-    from {
-      opacity: 0;
-      transform: translateY(30px);
+      transform: translateY(8px);
     }
     to {
       opacity: 1;
       transform: translateY(0);
     }
   }
-  
-  @keyframes slideInLeft {
-    from {
-      opacity: 0;
-      transform: translateX(-40px);
+
+  @keyframes chat-dot {
+    0%,
+    60%,
+    100% {
+      opacity: 0.32;
+      transform: translateY(0);
     }
-    to {
+    30% {
       opacity: 1;
-      transform: translateX(0);
+      transform: translateY(-2px);
     }
   }
-  
-  @keyframes slideInRight {
-    from {
-      opacity: 0;
-      transform: translateX(40px);
-    }
-    to {
-      opacity: 1;
-      transform: translateX(0);
-    }
+
+  /* ---- Input bar (inert) ---- */
+
+  .phone__input {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.6rem 0.75rem calc(0.6rem + env(safe-area-inset-bottom, 0px));
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    background: #0f0f11;
+    flex: none;
   }
-  
-  @keyframes scaleIn {
-    from {
-      opacity: 0;
-      transform: scale(0.9);
-    }
-    to {
-      opacity: 1;
+
+  .phone__plus,
+  .phone__mic {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.7rem;
+    height: 1.7rem;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.09);
+    color: rgba(255, 255, 255, 0.7);
+    flex: none;
+  }
+
+  .phone__plus svg,
+  .phone__mic svg {
+    width: 0.85rem;
+    height: 0.85rem;
+  }
+
+  .phone__field {
+    flex: 1 1 auto;
+    min-width: 0;
+    padding: 0.42rem 0.85rem;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.07);
+    /* 0.5 not 0.42 — even decorative chrome should clear 4.5:1. */
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 0.74rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+
+  /* ---- Coverflow -------------------------------------------------- *
+   * 3D arc of phone cards. Perspective lives on the frame, preserve-3d
+   * on the track. Cards are positioned purely by transform so the
+   * compositor can handle them.
+   *
+   * Blur is a fixed value per slot (applied by class from the integer
+   * distance to centre) — never tweened per frame, which is what makes
+   * this pattern stutter.
+   * ------------------------------------------------------------------ */
+
+  .coverflow {
+    position: relative;
+    width: 100%;
+    height: min(54rem, calc(100vh - 250px));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    perspective: 1600px;
+    perspective-origin: 50% 50%;
+  }
+
+  .coverflow__track {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    transform-style: preserve-3d;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .coverflow__card {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    translate: -50% -50%;
+    transform-style: preserve-3d;
+    will-change: transform, opacity;
+    /* Only the transition of blur is cheap here: it fires on the handful
+       of frames where the active card changes, not on every scroll tick. */
+    transition: filter 0.35s ease;
+  }
+
+  .coverflow__card--aside {
+    filter: blur(5px);
+    pointer-events: none;
+  }
+
+  /* Theme-aware: the section follows the page now, so fixed white dots
+     would vanish on the light ground. */
+  .coverflow__dot {
+    width: 0.4rem;
+    height: 0.4rem;
+    border-radius: 999px;
+    background: var(--line-strong);
+    transition: background-color 0.3s ease, width 0.3s ease;
+  }
+
+  .coverflow__dot--on {
+    width: 1.35rem;
+    background: var(--text-muted);
+  }
+
+  /* ---- Problem-section icons -------------------------------------- *
+   * The icon arrives amber, holds briefly, then settles to its resting
+   * colour. Done in CSS so both themes resolve from their own tokens
+   * rather than animating a hard-coded colour in JS.
+   * ------------------------------------------------------------------ */
+
+  /* ---- Problem-section icon loop ---------------------------------- *
+   * One keyframe drives BOTH scale and colour so they can never drift
+   * apart over an infinite loop, and so the amber can read the per-theme
+   * --rail-accent token directly.
+   *
+   * 6s cycle: grow to 1.3 + amber over 1.2s, back to rest by 2s, then
+   * ~2.8s of stillness before the next pass. Icons are offset 0.6s apart,
+   * so the cascade spans ~3.2s and the rest between passes is long.
+   * Paused unless the section is on screen.
+   * ------------------------------------------------------------------ */
+
+  @keyframes problem-icon-pulse {
+    0% {
       transform: scale(1);
+      color: var(--text-faint);
     }
-  }
-  
-  @keyframes rotateIn {
-    from {
-      opacity: 0;
-      transform: rotate(-10deg) scale(0.9);
+    20% {
+      transform: scale(1.3);
+      color: var(--rail-accent);
     }
-    to {
-      opacity: 1;
-      transform: rotate(0deg) scale(1);
-    }
-  }
-
-  @keyframes tech-marquee {
-    from {
-      transform: translateX(0);
-    }
-    to {
-      transform: translateX(calc(-50% - 0.5rem));
-    }
-  }
-
-  @keyframes project-title-reveal {
-    from {
-      clip-path: inset(0 100% 0 0);
-    }
-    to {
-      clip-path: inset(0 0 0 0);
-    }
-  }
-
-  @keyframes project-title-caret {
-    0%,
-    48% {
-      opacity: 1;
-    }
-    49%,
-    100% {
-      opacity: 0;
-    }
-  }
-
-  @keyframes project-title-caret-hide {
-    to {
-      opacity: 0;
-    }
-  }
-
-  @keyframes project-title-shimmer {
-    0%,
-    100% {
-      background-position: 0% 50%;
-    }
-    50% {
-      background-position: 100% 50%;
-    }
-  }
-
-  @keyframes hero-title-line-1 {
-    0%,
-    8% {
-      clip-path: inset(-0.08em 50% -0.12em 50%);
-    }
-    28%,
-    78% {
-      clip-path: inset(-0.08em -0.28em -0.12em -0.28em);
+    33% {
+      transform: scale(1);
+      color: var(--text-faint);
     }
     100% {
-      clip-path: inset(-0.08em 50% -0.12em 50%);
+      transform: scale(1);
+      color: var(--text-faint);
     }
   }
 
-  @keyframes hero-title-line-2 {
-    0%,
-    30% {
-      clip-path: inset(-0.08em 50% -0.12em 50%);
-    }
-    62%,
-    78% {
-      clip-path: inset(-0.08em -0.28em -0.12em -0.28em);
-    }
-    100% {
-      clip-path: inset(-0.08em 50% -0.12em 50%);
-    }
+  .problem-icon {
+    display: inline-flex;
+    transform-origin: center;
+    color: var(--text-faint);
+    animation: problem-icon-pulse 6s ease-in-out infinite;
+    animation-play-state: paused;
   }
 
-  @keyframes hero-title-caret-1 {
-    0%,
-    28% {
-      opacity: 1;
-    }
-    29%,
-    100% {
-      opacity: 0;
-    }
+  .problem-icon--running {
+    animation-play-state: running;
   }
 
-  @keyframes hero-title-caret-2 {
-    0%,
-    30% {
-      opacity: 0;
-    }
-    31%,
-    62% {
-      opacity: 1;
-    }
-    63%,
-    100% {
-      opacity: 0;
-    }
+  /* In focus mode the copy runs at full --text strength, so the ACTIVE
+     column reads bright and bold; the dim on the other two is what
+     recedes them. */
+  .problem-col--focus .section-muted {
+    color: var(--text);
   }
 
-  .tech-marquee-track {
-    animation: tech-marquee 70s linear infinite;
-    will-change: transform;
+  /* Weight is set for ALL focus-mode titles, not toggled on the active
+     one: switching 400 -> 500 mid-scroll changes glyph widths and can
+     rewrap the title, which would be a layout shift. The perceived
+     boldness difference comes from the opacity gap instead. */
+  .problem-col--focus .section-display {
+    font-weight: 500;
   }
 
-  .technology-marquee {
-    background: linear-gradient(to right, var(--background), transparent);
+  /* Desktop scroll-focus: the loop is off and the icon is driven by which
+     column is active instead. */
+  .problem-icon--focus {
+    animation: none;
+    transform: scale(1);
+    transition: transform 0.45s ease, color 0.45s ease;
   }
 
-  .technology-marquee--right {
-    background: linear-gradient(to left, var(--background), transparent);
+  .problem-icon--focus.problem-icon--active {
+    transform: scale(1.3);
+    color: var(--rail-accent);
   }
 
+
+  /* ---- Process rail ---------------------------------------------- *
+   * A hairline that fills downward with scroll. Only the fill's scaleY
+   * animates (transform-only), so nothing reflows.
+   * ------------------------------------------------------------------ */
+
+  /* Untracked portion: very faint, so the drawn part clearly leads. */
+  .process-rail {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 3px;
+    border-radius: 3px;
+    background: var(--rail-track);
+  }
+
+  /* Drawn portion: crisp, full-strength accent, easing off only at the tip. */
+  .process-rail__fill {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 3px;
+    height: 100%;
+    border-radius: 3px;
+    transform-origin: top center;
+    background: linear-gradient(
+      to bottom,
+      var(--rail-accent) 0%,
+      var(--rail-accent) 88%,
+      color-mix(in srgb, var(--rail-accent) 45%, transparent) 100%
+    );
+  }
+
+  /* The stage number brightens as the rail passes it, then stays lit. */
+  .rule-index {
+    transition: color 0.45s ease;
+  }
+
+  .rule-index--lit {
+    color: var(--rail-accent);
+  }
+
+  /* ---- Chat rail ------------------------------------------------- */
+
+  /* Touch / no-pin fallback: native scroll-snap carousel. */
+  .chat-rail-swipe {
+    display: flex;
+    gap: 1.25rem;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .chat-rail-swipe::-webkit-scrollbar {
+    display: none;
+  }
+
+  .chat-rail-swipe > * {
+    scroll-snap-align: center;
+    flex: 0 0 auto;
+  }
 }
 
-.theme-light .theme-ambient-primary {
-  background: rgba(210, 199, 178, 0.3);
+/* ==================================================================== *
+ * Focus
+ * ==================================================================== */
+
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 3px;
+  border-radius: 4px;
 }
 
-.theme-light .fourix-wordmark__image {
-  filter: invert(1);
-}
+/* ==================================================================== *
+ * Responsive
+ * ==================================================================== */
 
-.theme-light .theme-ambient-secondary {
-  background: rgba(164, 145, 110, 0.24);
-}
-
-.theme-light .theme-ambient-tertiary {
-  background: rgba(124, 111, 88, 0.16);
-}
-
-.theme-light .theme-ambient-overlay {
-  background: radial-gradient(circle at top, rgba(255, 255, 255, 0.55), transparent 42%);
-}
-
-.theme-light .panel-dark {
-  background-image: linear-gradient(135deg, #F8F4EB 0%, #EEE7D9 55%, #E1D5C0 100%);
-  color: #111111;
-}
-
-.theme-light .panel-light {
-  background-image: linear-gradient(135deg, #FFFFFF 0%, #F7F2E9 50%, #EEE4D4 100%);
-  color: #111111;
-}
-
-.theme-light .theme-toggle {
-  background: rgba(255, 255, 255, 0.8);
-  box-shadow: 0 14px 34px rgba(101, 82, 47, 0.12);
-}
-
-.theme-light .nav-cta {
-  background: #111111;
-  color: #ffffff;
-  box-shadow: 0 14px 34px rgba(101, 82, 47, 0.16);
-}
-
-.theme-light .nav-cta:hover {
-  background: #2A2721;
-}
-
-.theme-light .hero-pill {
-  border-color: rgba(17, 17, 17, 0.12);
-  background: rgba(255, 255, 255, 0.78);
-  color: #111111;
-}
-
-.theme-light .hero-title {
-  color: #111111;
-}
-
-.theme-light .hero-title__accent {
-  background-image: linear-gradient(to right, #111111, #7D7465, #111111);
-}
-
-.theme-light .hero-copy {
-  color: rgba(17, 17, 17, 0.78);
-}
-
-.theme-light .hero-button {
-  border-color: rgba(17, 17, 17, 0.14);
-  background: rgba(255, 255, 255, 0.8);
-  color: #111111;
-}
-
-.theme-light .hero-button:hover {
-  border-color: rgba(17, 17, 17, 0.24);
-  background: rgba(255, 255, 255, 0.95);
-}
-
-.theme-light .hero-chip-group {
-  color: rgba(17, 17, 17, 0.72);
-}
-
-.theme-light .hero-chip {
-  border: 1px solid rgba(17, 17, 17, 0.1);
-  background: rgba(255, 255, 255, 0.72);
-}
-
-.theme-light .hero-scroll-cue {
-  color: rgba(17, 17, 17, 0.38);
-}
-
-.theme-light .hero-scroll-cue__line {
-  background: linear-gradient(90deg, transparent, rgba(17, 17, 17, 0.16), transparent);
-}
-
-.theme-light .cta-copy {
-  color: rgba(17, 17, 17, 0.75);
-}
-
-.theme-light .cta-pill {
-  border-color: rgba(17, 17, 17, 0.12);
-  background: rgba(255, 255, 255, 0.8);
-  color: rgba(17, 17, 17, 0.74);
-}
-
-.theme-light .portfolio-intro {
-  color: rgba(17, 17, 17, 0.75);
-}
-
-.theme-light .contact-card {
-  border-color: rgba(17, 17, 17, 0.08);
-  background: rgba(255, 255, 255, 0.92);
-}
-
-.theme-light .contact-label {
-  color: rgba(17, 17, 17, 0.95);
-}
-
-.theme-light .contact-value {
-  color: rgba(17, 17, 17, 0.8);
-}
-
-.theme-light .theme-footer {
-  border-color: rgba(17, 17, 17, 0.08);
-  background: linear-gradient(135deg, #F8F4EB 0%, #F0E8DA 55%, #E6DBC8 100%);
-}
-
-.theme-light .footer-copy,
-.theme-light .footer-links {
-  color: rgba(17, 17, 17, 0.72);
-}
-
-.theme-light .footer-divider {
-  border-color: rgba(17, 17, 17, 0.08);
-}
-
-html.dark body {
-  background: linear-gradient(135deg, #050505 0%, #0C0C0C 45%, #1A1A1A 100%);
-  color: #ffffff;
-}
-
-html.light body {
-  background: linear-gradient(135deg, #F3F1EC 0%, #F8F4EB 46%, #E7DDCD 100%);
-  color: #111111;
+/* Below the coverflow breakpoint the phone stands alone in the swipe
+   carousel, where a full-height device is overbearing. Own cap. */
+@media (max-width: 1023px) {
+  .phone {
+    height: min(34rem, 66vh);
+  }
 }
 
 @media (max-width: 640px) {
@@ -834,44 +1098,17 @@ html.light body {
     height: 2.2rem;
   }
 
-  .hero-title-typing {
-    display: block;
-    width: calc(100% - 4rem);
-    max-width: calc(100% - 4rem);
-    margin-inline: auto;
-    margin-bottom: 1.6rem;
-    padding-inline: 0;
-    padding-right: 0;
-    padding-left: 0;
-    padding-bottom: 0.9rem;
-    text-align: center;
-    box-sizing: border-box;
+  /* A phone crops a 1.79:1 frame to a narrow slice. 70% lands past the
+     lit subject, over the darkest part of the room. */
+  .hero-backdrop__media {
+    object-position: 70% 50%;
+    background-position: 70% 50%;
   }
 
-  .hero-title-typing__copy {
-    visibility: hidden;
-    line-height: 1.14;
-  }
-
-  .hero-title-typing__overlay {
-    display: block;
-  }
-
-  .hero-title-typing__copy span,
-  .hero-title-typing__line {
-    white-space: normal;
-    display: block;
-    padding-bottom: 0.08em;
-  }
-
-  .hero-title-typing__line {
-    width: 100%;
-    clip-path: inset(-0.08em 50% -0.12em 50%);
-    margin-inline: auto;
-  }
-
-  .hero-chip-group {
-    display: none;
+  /* Copy runs full width on a phone, so a side scrim cannot help —
+     wash the whole frame instead. */
+  .hero-backdrop__scrim--center {
+    background: linear-gradient(to bottom, rgba(5, 5, 5, 0.62) 0%, rgba(5, 5, 5, 0.78) 100%);
   }
 
   .hero-scroll-cue {
@@ -887,8 +1124,51 @@ html.light body {
     font-size: 0.62rem;
     letter-spacing: 0.2em;
   }
-
 }
 
+/* ==================================================================== *
+ * Reduced motion
+ * ==================================================================== */
+
 @media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  html {
+    scroll-behavior: auto;
+  }
+
+  /* Parallax is disabled in the component too; this pins it regardless. */
+  .hero-backdrop__layer {
+    transform: none !important;
+    opacity: 1 !important;
+  }
+
+  /* The looping icon cascade stops completely — not merely sped up. */
+  .problem-icon {
+    animation: none !important;
+    transform: none !important;
+    color: var(--text-faint) !important;
+  }
+
+  /* Bubbles render in their final state — no entrance, no pulsing dots. */
+  .chat-bubble,
+  .chat-typing {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  /* No 3D arc, no blur: the coverflow is not rendered at all under
+     reduced motion (canPin is false), but pin these in case it is. */
+  .coverflow__card {
+    filter: none !important;
+    transition: none !important;
+  }
 }

@@ -1,0 +1,81 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080" preserveAspectRatio="xMidYMid slice" width="1920" height="1080" role="presentation">
+  <!--
+    Fourix hero stage — generated for this project, so the licence is ours.
+    Pure gradients only (no SVG filters) to keep rasterisation cheap on mobile.
+    Swap this file for a photograph if you'd rather have one; the hero reads
+    the path from `heroBackdrop` in app/page.tsx.
+  -->
+  <defs>
+    <linearGradient id="base" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#080808"/>
+      <stop offset="45%" stop-color="#050505"/>
+      <stop offset="100%" stop-color="#020202"/>
+    </linearGradient>
+
+    <radialGradient id="key" cx="0.6" cy="0.28" r="0.72">
+      <stop offset="0%" stop-color="#e8e8e8" stop-opacity="0.20"/>
+      <stop offset="38%" stop-color="#9a9a9a" stop-opacity="0.075"/>
+      <stop offset="70%" stop-color="#4d4d4d" stop-opacity="0.018"/>
+      <stop offset="100%" stop-color="#000000" stop-opacity="0"/>
+    </radialGradient>
+
+    <radialGradient id="cool" cx="0.11" cy="0.8" r="0.6">
+      <stop offset="0%" stop-color="#7f8794" stop-opacity="0.13"/>
+      <stop offset="55%" stop-color="#535a63" stop-opacity="0.04"/>
+      <stop offset="100%" stop-color="#000000" stop-opacity="0"/>
+    </radialGradient>
+
+    <radialGradient id="warm" cx="0.93" cy="0.62" r="0.5">
+      <stop offset="0%" stop-color="#c9bda8" stop-opacity="0.075"/>
+      <stop offset="100%" stop-color="#000000" stop-opacity="0"/>
+    </radialGradient>
+
+    <linearGradient id="horizon" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0"/>
+      <stop offset="30%" stop-color="#dcdcdc" stop-opacity="0.055"/>
+      <stop offset="62%" stop-color="#ffffff" stop-opacity="0.085"/>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+
+    <linearGradient id="horizonFade" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0"/>
+      <stop offset="50%" stop-color="#ffffff" stop-opacity="1"/>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+    <mask id="horizonMask">
+      <rect x="0" y="470" width="1920" height="300" fill="url(#horizonFade)"/>
+    </mask>
+
+    <linearGradient id="shaft" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.085"/>
+      <stop offset="55%" stop-color="#ffffff" stop-opacity="0.022"/>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+
+    <!-- Kept gentle on purpose: the CSS letterbox and bottom fade in
+         globals.css already darken the edges, so a heavy vignette here
+         would crush the frame to flat black. -->
+    <radialGradient id="vignette" cx="0.5" cy="0.42" r="0.78">
+      <stop offset="0%" stop-color="#000000" stop-opacity="0"/>
+      <stop offset="58%" stop-color="#000000" stop-opacity="0.06"/>
+      <stop offset="100%" stop-color="#000000" stop-opacity="0.55"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="1920" height="1080" fill="url(#base)"/>
+  <rect width="1920" height="1080" fill="url(#key)"/>
+  <rect width="1920" height="1080" fill="url(#cool)"/>
+  <rect width="1920" height="1080" fill="url(#warm)"/>
+
+  <!-- soft depth band, like a horizon catching the key light -->
+  <rect x="0" y="470" width="1920" height="300" fill="url(#horizon)" mask="url(#horizonMask)"/>
+
+  <!-- volumetric shafts falling from the upper right -->
+  <g opacity="0.5">
+    <polygon points="1180,-120 1330,-120 880,1180 640,1180" fill="url(#shaft)"/>
+    <polygon points="1420,-120 1500,-120 1180,1180 1030,1180" fill="url(#shaft)" opacity="0.72"/>
+    <polygon points="1640,-120 1780,-120 1500,1180 1330,1180" fill="url(#shaft)" opacity="0.5"/>
+  </g>
+
+  <rect width="1920" height="1080" fill="url(#vignette)"/>
+</svg>
