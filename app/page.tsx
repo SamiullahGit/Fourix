@@ -742,7 +742,7 @@ export default function Home() {
           isScrolled ? 'site-header--solid' : 'site-header--over-hero',
         ].join(' ')}
       >
-        <div className="mx-auto max-w-[80rem] px-5 py-4 md:px-7">
+        <div className="mx-auto max-w-[72rem] px-5 py-4 md:px-7">
           <div className="flex flex-col gap-4 md:grid md:grid-cols-[1fr_auto_1fr] md:items-center md:gap-6">
             <div className="flex items-center justify-between gap-3">
               <a href="#home" className="flex min-w-0 items-center gap-3">

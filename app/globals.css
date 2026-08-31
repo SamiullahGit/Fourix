@@ -334,6 +334,55 @@
     background: #ededed;
   }
 
+  /* ---- Light-mode cue over the dark hero -------------------------- *
+   * The video cannot change with the theme, so without this the toggle
+   * appears to do nothing while you are on the hero. Light mode gets a
+   * frosted white bar and an amber CTA; dark mode is untouched.
+   *
+   * Measured against the poster: the header band reads max 44 after the
+   * hero fade, so a 0.16 white veil keeps pure-white nav text at 8.4:1.
+   * Text is #ffffff here rather than the 0.72 alpha used on the bare
+   * hero — the veil lightens the ground, and the extra headroom covers a
+   * brighter video frame than the poster.
+   * ------------------------------------------------------------------ */
+
+  :root[data-theme='light'] .site-header--over-hero {
+    background: rgba(255, 255, 255, 0.16);
+    /* Falls back to the plain veil where backdrop-filter is unsupported.
+       No manual -webkit- prefix: lightningcss adds it, and a hand-written
+       one placed after the standard property makes it dedupe the standard
+       property away — which drops the blur in Firefox. */
+    backdrop-filter: blur(12px);
+    border-bottom-color: rgba(255, 255, 255, 0.24);
+  }
+
+  :root[data-theme='light'] .site-header--over-hero .nav-links a,
+  :root[data-theme='light'] .site-header--over-hero .theme-toggle {
+    color: #ffffff;
+  }
+
+  :root[data-theme='light'] .site-header--over-hero .theme-toggle {
+    border-color: rgba(255, 255, 255, 0.32);
+  }
+
+  :root[data-theme='light'] .site-header--over-hero .nav-links a:hover,
+  :root[data-theme='light'] .site-header--over-hero .nav-links a:focus-visible {
+    background: rgba(255, 255, 255, 0.22);
+  }
+
+  /* Amber pill in light mode — header and hero body both sit on the video.
+     Dark ink, never white: white on this amber is 1.87:1. */
+  :root[data-theme='light'] .site-header--over-hero .cta-pill,
+  :root[data-theme='light'] .hero-stage .cta-pill {
+    background: #eab464;
+    color: #1a1207;
+  }
+
+  :root[data-theme='light'] .site-header--over-hero .cta-pill:hover,
+  :root[data-theme='light'] .hero-stage .cta-pill:hover {
+    background: #f0c07c;
+  }
+
   /* Scrolled past the hero: picks up the page surface, flips with theme. */
   .site-header--solid {
     background: color-mix(in srgb, var(--bg) 84%, transparent);
