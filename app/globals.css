@@ -702,11 +702,14 @@
     flex: 1 1 auto;
     flex-direction: column;
     gap: 0.5rem;
-    overflow-y: auto;
-    /* overflow-y:auto makes overflow-x compute to auto; the bubble tails
-       sit 5px outside their box, so pin the x axis to avoid a stray
-       horizontal scrollbar inside the phone. */
-    overflow-x: hidden;
+    /* The thread inside the mock device is decorative — never a scroll
+       surface. If it scrolls, a wheel or swipe over the phone is captured
+       by it and the page will not move. overflow:hidden still permits the
+       component's programmatic scrollTop, which keeps the newest bubble
+       in view. Deliberately NOT gated on pointer type: DevTools device
+       mode with a mouse reports pointer:fine, so a coarse-only rule
+       missed exactly the case being tested. */
+    overflow: hidden;
     padding: 0.9rem 0.85rem 0.6rem;
     scrollbar-width: none;
   }
@@ -1152,10 +1155,11 @@
  * Responsive
  * ==================================================================== */
 
-/* Below the coverflow breakpoint the phone stands alone in the swipe
-   carousel, where a full-height device is overbearing. Own cap. */
+/* Scoped to the swipe carousel only. Inside the pinned coverflow the
+   phone must follow the frame sizing, or on mobile it would be capped
+   smaller than the container it sits in. */
 @media (max-width: 1023px) {
-  .phone {
+  .chat-rail-swipe .phone {
     height: min(34rem, 66vh);
   }
 }
@@ -1231,6 +1235,38 @@
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   }
 
+  /* While the section is pinned, scroll progress drives the rail. Native
+     snap and touch panning are switched off so the two cannot fight each
+     other; the free-swipe version below is what reduced-motion gets. */
+  /* Pinned: a transform moves the rail, so it must not be a scroll
+     container at all. overflow:visible removes every horizontal scroll
+     surface, snap and overscroll-containment that could swallow a swipe
+     or fight the transform. */
+  .mobile-chat-carousel--pinned .mobile-chat-carousel__rail {
+    overflow: visible;
+    scroll-snap-type: none;
+    overscroll-behavior: auto;
+    touch-action: pan-y;
+    will-change: transform;
+  }
+
+  /* Nothing inside the mock device should intercept a page swipe. */
+  .mobile-chat-carousel--pinned .phone {
+    touch-action: pan-y;
+  }
+
+  .mobile-chat-carousel--pinned .mobile-chat-carousel__copy {
+    position: static;
+    box-shadow: none;
+  }
+
+  /* 75svh overflows the pinned frame once the header pad, caption and dots
+     are reserved. 262px = 72 header + 130 caption+margin + 40 dots + 20
+     slack, so the phone always fits the hold with room to breathe. */
+  .mobile-chat-carousel--pinned .mobile-chat-carousel__slide .phone {
+    height: min(34rem, calc(100svh - 262px));
+  }
+
   .mobile-chat-carousel__rail {
     display: flex;
     gap: 1rem;
@@ -1238,7 +1274,12 @@
     overflow-y: hidden;
     scroll-snap-type: x mandatory;
     scroll-padding-inline: 12.5vw;
-    overscroll-behavior: contain;
+    /* Contain the HORIZONTAL axis only. Plain 'contain' also blocks
+       vertical chaining, so a swipe starting on the rail could never
+       scroll the page — the band around the phone felt dead while the
+       areas above and below worked. */
+    overscroll-behavior-x: contain;
+    overscroll-behavior-y: auto;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
   }

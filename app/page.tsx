@@ -551,12 +551,16 @@ export default function Home() {
   const [cardStep, setCardStep] = useState(CARD_STEP_MAX);
   const cardCount = packageParts.length;
   const [isMobile, setIsMobile] = useState(false);
+  const [allowMotion, setAllowMotion] = useState(false);
   const mobileRailRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const pinnable = window.matchMedia('(min-width: 1024px) and (pointer: fine)');
     const noMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
-    const sync = () => setCanPin(pinnable.matches && !noMotion.matches);
+    const sync = () => {
+      setAllowMotion(!noMotion.matches);
+      setCanPin(pinnable.matches && !noMotion.matches);
+    };
     sync();
     pinnable.addEventListener('change', sync);
     noMotion.addEventListener('change', sync);
@@ -652,6 +656,31 @@ export default function Home() {
     };
   }, [isMobile]);
 
+  /* The mobile carousel pins the same way the desktop coverflow does:
+     hold the section, advance the rail one phone per slice of the hold,
+     then release. Reduced motion keeps the free-swipe carousel. */
+  const mobilePinned = isMobile && allowMotion;
+  const sectionPinned = canPin || mobilePinned;
+
+  /* Move the rail with a transform, not scrollLeft. Several mobile engines
+     clamp or ignore scrollLeft on an overflow:hidden element, which leaves
+     the rail drifting without ever completing — a transform is exact and
+     runs on the compositor. */
+  const [mobileStep, setMobileStep] = useState(0);
+  useEffect(() => {
+    if (!mobilePinned) {
+      setMobileStep(0);
+      return;
+    }
+    const rail = mobileRailRef.current;
+    if (!rail) return;
+    const measure = () => setMobileStep(rail.clientWidth + 16); // slide + 1rem gap
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(rail);
+    return () => observer.disconnect();
+  }, [mobilePinned]);
+
   const goToMobileCard = (index: number) => {
     const rail = mobileRailRef.current;
     const card = rail?.children[index] as HTMLElement | undefined;
@@ -662,12 +691,15 @@ export default function Home() {
   // One viewport-ish of scroll per card transition, and the horizontal
   // spread that keeps the arc filling the section at any width.
   useEffect(() => {
-    if (!canPin) {
+    if (!canPin && !mobilePinned) {
       setRailTravel(0);
       return;
     }
     const measure = () => {
-      setRailTravel((cardCount - 1) * Math.round(window.innerHeight * 0.85));
+      // A phone needs less runway than a mouse wheel: 0.85vh per card is
+      // 4-7 swipes and reads as endless.
+      const perCard = mobilePinned ? 0.6 : 0.85;
+      setRailTravel((cardCount - 1) * Math.round(window.innerHeight * perCard));
       setCardStep(
         Math.round(Math.max(CARD_STEP_MIN, Math.min(window.innerWidth * CARD_STEP_RATIO, CARD_STEP_MAX))),
       );
@@ -675,7 +707,7 @@ export default function Home() {
     measure();
     window.addEventListener('resize', measure);
     return () => window.removeEventListener('resize', measure);
-  }, [canPin, cardCount]);
+  }, [canPin, mobilePinned, cardCount]);
 
   const { scrollYProgress: railProgress } = useScroll({
     target: railSectionRef,
@@ -686,11 +718,19 @@ export default function Home() {
   // last cards a moment to be read before the arc starts/stops moving.
   const cardPosition = useTransform(railProgress, [0, 0.08, 0.92, 1], [0, 0, cardCount - 1, cardCount - 1]);
 
+  /* The mobile rail rides the same curve as cardPosition, so the phone that
+     is centred always matches the caption and the lit dot. The flat 8% at
+     each end gives the first and last phone a beat before the pin releases. */
+  const mobileRailX = useTransform(
+    cardPosition,
+    (position) => -position * mobileStep,
+  );
+
   // Discrete: drives blur, z-index and which thread animates. Skipped when
   // the arc is not rendered so mobile scrolling does not re-render for
   // state nothing is reading.
   useMotionValueEvent(cardPosition, 'change', (value) => {
-    if (!canPin) return;
+    if (!canPin && !mobilePinned) return;
     const next = Math.max(0, Math.min(cardCount - 1, Math.round(value)));
     setActiveCard((current) => (current === next ? current : next));
   });
@@ -1207,7 +1247,7 @@ export default function Home() {
           <div
             ref={railSectionRef}
             className="relative"
-            style={canPin ? { height: `calc(100vh + ${railTravel}px)` } : undefined}
+            style={sectionPinned ? { height: `calc(100vh + ${railTravel}px)` } : undefined}
           >
             {canPin ? (
               // pt-[5.5rem] clears the fixed site header, which otherwise
@@ -1259,12 +1299,24 @@ export default function Home() {
                 </div>
               </div>
             ) : isMobile ? (
-              <div className="mobile-chat-carousel">
+              <div
+                className={
+                  mobilePinned
+                    ? 'sticky top-0 flex h-screen flex-col justify-center pt-[4.5rem]'
+                    : undefined
+                }
+              >
+              <div className={['mobile-chat-carousel', mobilePinned ? 'mobile-chat-carousel--pinned' : ''].join(' ')}>
                 <div className="mobile-chat-carousel__copy" aria-live="polite">
                   <h3 className="section-display text-xl font-medium leading-snug">{packageParts[activeCard].title}</h3>
                   <p className="section-muted mt-3 text-sm leading-7">{packageParts[activeCard].text}</p>
                 </div>
-                <div ref={mobileRailRef} className="mobile-chat-carousel__rail" aria-label="Automation conversation examples">
+                <motion.div
+                  ref={mobileRailRef}
+                  className="mobile-chat-carousel__rail"
+                  style={mobilePinned ? { x: mobileRailX } : undefined}
+                  aria-label="Automation conversation examples"
+                >
                   {packageParts.map((part, index) => (
                     <article
                       key={part.title}
@@ -1278,7 +1330,7 @@ export default function Home() {
                       />
                     </article>
                   ))}
-                </div>
+                </motion.div>
                 <div className="mobile-chat-carousel__dots" aria-label="Choose an automation example">
                   {packageParts.map((part, index) => (
                     <button
@@ -1291,6 +1343,7 @@ export default function Home() {
                     />
                   ))}
                 </div>
+              </div>
               </div>
             ) : (
               <>
