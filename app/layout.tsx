@@ -18,6 +18,15 @@ export const metadata: Metadata = {
     'Fourix builds AI automation for service businesses: missed-call and after-hours booking recovery, automatic reminders that cut no-shows, and follow-up on every new inquiry.',
 }
 
+/**
+ * Runs before first paint on every full page load — and every Home <-> FAQ
+ * move is a full load, since those are plain anchors. Reads the stored
+ * choice, falls back to the OS preference only when nothing is stored, and
+ * writes data-theme onto <html>. Wrapped in try/catch so a browser with site
+ * data blocked still renders (it just keeps the server's dark default).
+ */
+const THEME_SCRIPT = `(function(){try{var d=document.documentElement,t=localStorage.getItem('fourix-theme');if(t!=='light'&&t!=='dark'){t=window.matchMedia('(prefers-color-scheme: light)').matches?'light':'dark';}d.setAttribute('data-theme',t);}catch(e){}})();`
+
 export const viewport: Viewport = {
   colorScheme: 'light dark',
   themeColor: [
@@ -32,8 +41,22 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" data-theme="dark" className={manrope.variable}>
+    /*
+     * data-theme is the single source of truth for every colour on the site.
+     * The server always emits "dark"; THEME_SCRIPT below corrects it from the
+     * stored choice before the browser paints anything, so a light-mode
+     * reader never sees a dark frame. suppressHydrationWarning is required
+     * because that script mutates the attribute before React hydrates.
+     */
+    <html lang="en" data-theme="dark" suppressHydrationWarning className={manrope.variable}>
       <body className="antialiased">
+        {/*
+         * First thing in the body, inline and synchronous: the browser runs it
+         * while parsing, before any content is laid out. `next/script` with
+         * beforeInteractive is the wrong tool here — it is for external src
+         * scripts and explicitly does not block paint or hydration.
+         */}
+        <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
         {children}
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>

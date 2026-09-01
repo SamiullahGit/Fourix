@@ -34,6 +34,7 @@ import Image from 'next/image';
 import { useEffect, useRef, useState, type ComponentType } from 'react';
 
 import ChatThread, { type ChatMessage } from '@/components/chat-thread';
+import { SiteFooter, SiteHeader, baseNavLinks, calendlyUrl } from '@/components/site-chrome';
 import {
   EnvelopeIcon,
   FOURIX_MARK_PATH,
@@ -83,12 +84,12 @@ const founders: readonly Founder[] = [];
 
 /* ------------------------------------------------------------------ */
 
-const heroHeadline = ['Stop losing customers', 'to calls nobody answers.'] as const;
+const heroHeadline = ['Stop losing customers', 'stuck waiting for', 'answers.'] as const;
 
 const problems = [
   {
-    title: 'The phone rings when nobody can pick up',
-    text: 'A caller who reaches voicemail is free to call the next business on the list.',
+    title: 'Calls and messages nobody can answer',
+    text: 'Someone who reaches voicemail or silence is free to try the next business.',
     icon: Phone,
   },
   {
@@ -97,8 +98,8 @@ const problems = [
     icon: CalendarDays,
   },
   {
-    title: 'Inquiries sit in an inbox going cold',
-    text: 'Every hour it waits for a reply is an hour they can book somewhere else.',
+    title: 'Inquiries go cold in any channel',
+    text: 'Every hour without a reply is an hour they can book somewhere else.',
     icon: Mail,
   },
 ] as const;
@@ -188,36 +189,6 @@ const process = [
   },
 ] as const;
 
-const calendlyUrl = 'https://calendly.com/contact-fourix/30min';
-
-const footerSocials = [
-  {
-    name: 'Facebook',
-    href: 'https://www.facebook.com/share/1EdSgaohqx/',
-    bg: 'bg-[#1877F2]',
-    logo: 'https://cdn.simpleicons.org/facebook/ffffff',
-  },
-  {
-    name: 'LinkedIn',
-    href: 'https://www.linkedin.com/company/fourix-ai/',
-    bg: 'bg-[#0A66C2]',
-    // Local, not cdn.simpleicons.org: that CDN 404s for linkedin since the
-    // brand was dropped from the set, which showed a broken-image icon.
-    logo: '/logo-linkedin.svg',
-  },
-  {
-    name: 'Instagram',
-    href: 'https://www.instagram.com/fourix.ai?igsh=MzY5eTF2ZDk0OHg4',
-    bg: 'bg-[radial-gradient(circle_at_30%_107%,#fdf497_0%,#fdf497_5%,#fd5949_45%,#d6249f_60%,#285AEB_90%)]',
-    logo: 'https://cdn.simpleicons.org/instagram/ffffff',
-  },
-  {
-    name: 'Gmail',
-    href: 'mailto:contact.fourix@gmail.com',
-    bg: 'bg-[#EA4335]',
-    logo: 'https://cdn.simpleicons.org/gmail/ffffff',
-  },
-] as const;
 
 /**
  * Hero backdrop. Compressed from the 2.4MB public/bg.jpg original down to
@@ -323,20 +294,30 @@ const flowOutY = flowOutputs.map((_, i) => ((i + 0.5) * FLOW_H) / flowOutputs.le
 /* One shared timeline in seconds, so the five beats always resolve in the
    order the section is meant to read: channels in, lines inward, the hub
    lands, lines outward, results in. */
+/* MOBILE / unpinned only. Desktop never reads this: above lg with a fine
+   pointer the sequence is driven by scroll progress through FLOW_WINDOWS.
+
+   Held to ~2.2s end to end. It used to run 3.55s, which a fast flick could
+   outrun — the section was already scrolling past while only the first two
+   channels had appeared, so the reader caught a half-empty diagram with just
+   the static tracks showing. At 2.2s, triggered the moment any part of the
+   section touches the viewport (so it starts while the diagram is still
+   below the fold), a flick either lets it finish or carries the reader past
+   a diagram that completes off-screen and persists. */
 const flowAt = {
-  input: (i: number) => i * 0.15,
-  lineIn: (i: number) => 0.75 + i * 0.1,
-  hub: 1.7,
-  lineOut: (i: number) => 2.2 + i * 0.1,
-  output: (i: number) => 2.7 + i * 0.1,
+  input: (i: number) => i * 0.09,
+  lineIn: (i: number) => 0.46 + i * 0.06,
+  hub: 1.05,
+  lineOut: (i: number) => 1.36 + i * 0.06,
+  output: (i: number) => 1.66 + i * 0.06,
 };
 
 const flowPillIn = (delay: number, from: number): Variants => ({
   hidden: { opacity: 0, x: from },
-  shown: { opacity: 1, x: 0, transition: { duration: 0.55, delay, ease: EASE_CINEMATIC } },
+  shown: { opacity: 1, x: 0, transition: { duration: 0.36, delay, ease: EASE_CINEMATIC } },
 });
 
-const flowDraw = (delay: number, duration = 0.7): Variants => ({
+const flowDraw = (delay: number, duration = 0.45): Variants => ({
   hidden: { pathLength: 0, opacity: 0 },
   shown: {
     pathLength: 1,
@@ -350,7 +331,7 @@ const flowDraw = (delay: number, duration = 0.7): Variants => ({
 
 const flowHubIn: Variants = {
   hidden: { opacity: 0, scale: 0.92 },
-  shown: { opacity: 1, scale: 1, transition: { duration: 0.6, delay: flowAt.hub, ease: EASE_CINEMATIC } },
+  shown: { opacity: 1, scale: 1, transition: { duration: 0.4, delay: flowAt.hub, ease: EASE_CINEMATIC } },
 };
 
 /* The arrival beat. This flares on SCALE rather than opacity: the global
@@ -362,7 +343,7 @@ const flowHubGlow: Variants = {
   shown: {
     opacity: 1,
     scale: [0.8, 1.3, 1],
-    transition: { duration: 1.5, delay: flowAt.hub, times: [0, 0.34, 1], ease: 'easeOut' },
+    transition: { duration: 0.9, delay: flowAt.hub, times: [0, 0.34, 1], ease: 'easeOut' },
   },
 };
 
@@ -535,7 +516,7 @@ function FlowWires({
         {progress && range ? (
           <FlowWirePinned d="M12 -3 L12 75" progress={progress} range={range(0)} />
         ) : (
-          <motion.path className="flow-wires__live" d="M12 -3 L12 75" variants={flowDraw(delay(0), 0.9)} />
+          <motion.path className="flow-wires__live" d="M12 -3 L12 75" variants={flowDraw(delay(0), 0.6)} />
         )}
       </svg>
     </div>
@@ -756,16 +737,12 @@ function CoverflowCard({
 
 export default function Home() {
   const shouldReduceMotion = useReducedMotion();
-  const [theme, setTheme] = useState<'dark' | 'light'>('dark');
-  const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
-  const [isScrolled, setIsScrolled] = useState(false);
 
-  const currentYear = new Date().getFullYear();
 
+  /* The shared base plus this page's gated anchors. Contact stays last so
+     the header's FAQ/Home slot lands after it. */
   const navLinks = [
-    { href: '#problem', label: 'The problem' },
-    { href: '#what-we-do', label: 'What we do' },
-    { href: '#how-it-works', label: 'How it works' },
+    ...baseNavLinks.filter((link) => link.href !== '#book'),
     ...(showcase.length > 0 ? [{ href: '#proof', label: 'Proof' }] : []),
     ...(founders.length > 0 ? [{ href: '#team', label: 'Team' }] : []),
     { href: '#book', label: 'Contact' },
@@ -1214,49 +1191,6 @@ export default function Home() {
   const heroImageY = useTransform(heroProgress, [0, 1], ['0%', '8%']);
   const heroImageOpacity = useTransform(heroProgress, [0, 1], [1, 0.35]);
 
-  // The header is transparent over the hero and gains its panel once the
-  // page moves, so the composition on the first screen stays clean.
-  useEffect(() => {
-    // Measure the hero'''s REAL bottom edge rather than assuming it equals
-    // innerHeight: 100dvh, the video vs poster swap and mobile browser
-    // chrome all make the hero taller or shorter than the viewport. The
-    // header wears its over-hero treatment only while a dark hero is
-    // genuinely behind it — otherwise light text lands on the light page
-    // body and disappears.
-    const onScroll = () => {
-      const heroBottom = heroRef.current?.getBoundingClientRect().bottom ?? window.innerHeight;
-      setIsScrolled(heroBottom <= 88);
-    };
-    onScroll();
-    window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
-  }, []);
-
-  useEffect(() => {
-    const storedTheme = window.localStorage.getItem('fourix-theme');
-    const initialTheme = storedTheme === 'light' ? 'light' : 'dark';
-    setTheme(initialTheme);
-  }, []);
-
-  // Single source of truth: every colour on the page derives from the
-  // variables keyed off this attribute, so the whole page flips at once.
-  useEffect(() => {
-    document.documentElement.setAttribute('data-theme', theme);
-    window.localStorage.setItem('fourix-theme', theme);
-  }, [theme]);
-
-  useEffect(() => {
-    if (!isMobileNavOpen) {
-      return;
-    }
-
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-
-    return () => {
-      document.body.style.overflow = previousOverflow;
-    };
-  }, [isMobileNavOpen]);
 
   /* Defined once so the pinned and unpinned hubs cannot drift apart. Plain
      JSX, no hooks, so it is safe to build here. */
@@ -1289,154 +1223,7 @@ export default function Home() {
         Skip to content
       </a>
 
-      <motion.header
-        {...riseIn(0)}
-        className={[
-          'site-header fixed inset-x-0 top-0 z-50',
-          // Over the hero it is part of that always-dark stage; once the page
-          // moves it becomes a themed surface and flips with the toggle.
-          isScrolled ? 'site-header--solid' : 'site-header--over-hero',
-        ].join(' ')}
-      >
-        <div className="mx-auto max-w-[72rem] px-5 py-4 md:px-7">
-          <div className="flex flex-col gap-4 md:grid md:grid-cols-[1fr_auto_1fr] md:items-center md:gap-6">
-            <div className="flex items-center justify-between gap-3">
-              <a href="#home" className="flex min-w-0 items-center gap-3">
-                <Image
-                  src="/Iccon.png"
-                  alt="Fourix logo"
-                  width={64}
-                  height={64}
-                  className="h-11 w-11 shrink-0 rounded-2xl border border-white/15 object-cover sm:h-[3.25rem] sm:w-[3.25rem]"
-                  loading="eager"
-                  priority
-                />
-                <span className="fourix-wordmark fourix-wordmark--lg" aria-label="Fourix">
-                  <Image src="/fourix-wordmark.png" alt="" width={660} height={230} className="fourix-wordmark__image" priority />
-                </span>
-              </a>
-
-              <div className="flex items-center gap-2 sm:gap-2.5 md:hidden">
-                <button
-                  type="button"
-                  onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-                  className="theme-toggle h-9 w-9"
-                  aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
-                >
-                  {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-                </button>
-
-                <a
-                  href={calendlyUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="cta-pill h-9 px-4 text-[0.8rem]"
-                >
-                  Book
-                </a>
-
-                <button
-                  type="button"
-                  onClick={() => setIsMobileNavOpen((current) => !current)}
-                  className="theme-toggle h-9 w-9"
-                  aria-label={isMobileNavOpen ? 'Close navigation menu' : 'Open navigation menu'}
-                  aria-expanded={isMobileNavOpen}
-                >
-                  {isMobileNavOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
-                </button>
-              </div>
-            </div>
-
-            <nav className="nav-links hidden items-center justify-center gap-1 text-sm md:flex">
-              {navLinks.map((link) => (
-                <a key={link.href} href={link.href} className="whitespace-nowrap">
-                  {link.label}
-                </a>
-              ))}
-            </nav>
-
-            <div className="hidden items-center justify-end gap-3 md:flex">
-              <button
-                type="button"
-                onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-                className="theme-toggle h-10 w-10"
-                aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
-              >
-                {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-              </button>
-
-              <a href={calendlyUrl} target="_blank" rel="noreferrer" className="cta-pill h-10 px-5 text-sm">
-                Book a meeting
-              </a>
-            </div>
-          </div>
-        </div>
-      </motion.header>
-
-      <AnimatePresence>
-        {isMobileNavOpen ? (
-          <motion.div
-            initial={shouldReduceMotion ? { opacity: 1 } : { opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[65] md:hidden"
-          >
-            <button
-              type="button"
-              aria-label="Close navigation backdrop"
-              className="absolute inset-0 bg-black/45 backdrop-blur-sm"
-              onClick={() => setIsMobileNavOpen(false)}
-            />
-
-            <motion.aside
-              initial={shouldReduceMotion ? { x: 0 } : { x: '100%' }}
-              animate={{ x: 0 }}
-              exit={shouldReduceMotion ? { x: 0 } : { x: '100%' }}
-              transition={{ duration: shouldReduceMotion ? 0.1 : 0.28, ease: 'easeOut' }}
-              className="absolute right-0 top-0 flex h-full w-[82%] max-w-sm flex-col border-l px-6 py-6 shadow-[-20px_0_60px_rgba(0,0,0,0.28)]" style={{ background: 'var(--bg)' }}
-            >
-              <div className="flex items-center justify-between border-b pb-4">
-                <div>
-                  <p className="section-eyebrow uppercase tracking-[0.2em]">Menu</p>
-                  <p className="mt-2 text-lg font-medium">Navigate Fourix</p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setIsMobileNavOpen(false)}
-                  className="theme-toggle h-10 w-10"
-                  aria-label="Close navigation menu"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              </div>
-
-              <nav className="mt-6 flex flex-col gap-3 text-base">
-                {navLinks.map((link) => (
-                  <a
-                    key={link.href}
-                    href={link.href}
-                    onClick={() => setIsMobileNavOpen(false)}
-                    className="nav-drawer-link inline-flex items-center justify-between rounded-2xl border px-4 py-3"
-                  >
-                    <span>{link.label}</span>
-                    <ArrowUpRight className="h-4 w-4" />
-                  </a>
-                ))}
-              </nav>
-
-              <a
-                href={calendlyUrl}
-                target="_blank"
-                rel="noreferrer"
-                onClick={() => setIsMobileNavOpen(false)}
-                className="cta-pill mt-auto h-11 px-4 text-sm"
-              >
-                Book a meeting
-              </a>
-            </motion.aside>
-          </motion.div>
-        ) : null}
-      </AnimatePresence>
+      <SiteHeader navLinks={navLinks} heroRef={heroRef} />
 
       <main id="home" className="relative">
         {/* ------------------------------------------------- HERO ---- */}
@@ -1537,12 +1324,15 @@ export default function Home() {
                 {...riseIn(0.15)}
                 className="hero-title text-[2.35rem] font-normal leading-[1.06] sm:text-5xl md:text-[3.6rem] lg:text-[4.15rem]"
               >
-                <span className="block">{heroHeadline[0]}</span>
-                <span className="block">{heroHeadline[1]}</span>
+                {heroHeadline.map((line) => (
+                  <span key={line} className="block">
+                    {line}
+                  </span>
+                ))}
               </motion.h1>
 
               <motion.p {...riseIn(0.3)} className="hero-copy mx-auto mt-7 max-w-xl text-base leading-8 md:text-lg md:leading-9">
-                Missed and after-hours calls, no-show reminders, and inquiry follow-up — automated for service businesses.
+                Missed calls and messages, no-show reminders, and inquiry follow-up — automated across every channel.
               </motion.p>
 
               <motion.div
@@ -1618,7 +1408,7 @@ export default function Home() {
                   {...revealIn(0.18)}
                   className="section-muted mt-6 max-w-xl text-base leading-8 md:text-lg"
                 >
-                  Nobody complains when they cannot get through. They book somewhere else.
+                  Nobody complains when a call or message goes unanswered. They just book elsewhere.
                 </motion.p>
 
                 {/* No transform on this row at any point — scroll progress
@@ -2161,83 +1951,7 @@ export default function Home() {
 
       </main>
 
-      <footer className="site-footer relative">
-        <div className="mx-auto grid max-w-7xl gap-8 px-5 py-10 md:grid-cols-[1.2fr_0.8fr_0.8fr] md:px-8">
-          <div>
-            <div className="flex items-center gap-3">
-              <Image
-                src="/Iccon.png"
-                alt="Fourix logo"
-                width={48}
-                height={48}
-                className="h-10 w-10 rounded-2xl border object-cover"
-                loading="eager"
-              />
-              <span className="section-display text-lg font-medium">Fourix</span>
-            </div>
-            <p className="footer-copy mt-4 max-w-md text-sm leading-7">
-              AI automation for service businesses. We recover missed calls, cut no-shows, and follow up on every inquiry —
-              built on the tools you already use.
-            </p>
-            <div className="mt-6 flex flex-wrap gap-3">
-              {footerSocials.map((item) => (
-                <a
-                  key={item.name}
-                  href={item.href}
-                  target={item.href.startsWith('mailto:') ? undefined : '_blank'}
-                  rel={item.href.startsWith('mailto:') ? undefined : 'noreferrer'}
-                  aria-label={item.name}
-                  className="group inline-flex h-12 w-12 items-center justify-center rounded-2xl border transition hover:-translate-y-1"
-                >
-                  <span
-                    className={[
-                      'inline-flex h-9 w-9 items-center justify-center rounded-xl shadow-[inset_0_1px_0_rgba(255,255,255,0.22)]',
-                      item.bg,
-                    ].join(' ')}
-                  >
-                    <img src={item.logo} alt="" className="h-5 w-5 object-contain" loading="lazy" />
-                  </span>
-                </a>
-              ))}
-            </div>
-          </div>
-
-          <div>
-            <p className="footer-heading text-xs font-medium uppercase tracking-[0.2em]">Explore</p>
-            <nav className="footer-links mt-4 flex flex-col gap-3 text-sm">
-              {navLinks.map((link) => (
-                <a key={link.href} href={link.href} className="inline-flex items-center gap-2 transition">
-                  <ArrowUpRight className="h-4 w-4" /> {link.label}
-                </a>
-              ))}
-            </nav>
-          </div>
-
-          <div>
-            <p className="footer-heading text-xs font-medium uppercase tracking-[0.2em]">What we automate</p>
-            <div className="footer-copy mt-4 flex flex-col gap-3 text-sm">
-              <div className="inline-flex items-center gap-2">
-                <Phone className="h-4 w-4" /> Missed &amp; after-hours calls
-              </div>
-              <div className="inline-flex items-center gap-2">
-                <CalendarDays className="h-4 w-4" /> Appointment reminders
-              </div>
-              <div className="inline-flex items-center gap-2">
-                <MessageSquare className="h-4 w-4" /> Inquiry follow-up
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="footer-divider border-t">
-          <div className="footer-copy mx-auto flex max-w-7xl flex-col gap-2 px-5 py-4 text-sm md:flex-row md:items-center md:justify-between md:px-8">
-            <p>Copyright © {currentYear} Fourix. All rights reserved.</p>
-            <p className="inline-flex items-center gap-2">
-              <CircleUserRound className="h-4 w-4" /> AI automation for service businesses
-            </p>
-          </div>
-        </div>
-      </footer>
+      <SiteFooter navLinks={navLinks} />
     </div>
   );
 }
