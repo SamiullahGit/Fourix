@@ -1665,7 +1665,16 @@ export default function Home() {
                 </motion.h2>
 
                 <motion.div
-                  className="mt-10 md:mt-14 lg:grid lg:grid-cols-[auto_minmax(5rem,1fr)_auto_minmax(5rem,1fr)_auto] lg:items-center"
+                  /* 960px, not lg (1024px). The switch was ALREADY keyed to
+                     reported CSS width — no physical-device signal is involved
+                     here — but Chrome Android's "request desktop site" reports
+                     980px, which fell just under lg and handed a faked-wide
+                     viewport the mobile stack. 960px is the lowest safe
+                     threshold: the fixed columns (216 + 304 + 192) plus two
+                     80px minimum connectors plus 64px padding need 936px, so
+                     960 clears it with room. This value MUST stay in step with
+                     the @media rule in globals.css that sizes the same grid. */
+                  className="mt-10 md:mt-14 min-[960px]:grid min-[960px]:grid-cols-[auto_minmax(5rem,1fr)_auto_minmax(5rem,1fr)_auto] min-[960px]:items-center"
                   {...(canPin || shouldReduceMotion
                     ? {}
                     : {

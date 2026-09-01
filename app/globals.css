@@ -1526,7 +1526,7 @@
   color: var(--text);
 }
 
-@media (min-width: 1024px) {
+@media (min-width: 960px) {
   /* Five equal rows over exactly FLOW_H, then four, so each pill centres on
      the y the connector paths are drawn to. Change either of these and the
      FLOW_H / FLOW_GAP constants in page.tsx must change with them.
