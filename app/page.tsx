@@ -3,6 +3,8 @@
 import {
   AnimatePresence,
   motion,
+  useInView,
+  useMotionValue,
   useMotionValueEvent,
   useReducedMotion,
   useScroll,
@@ -13,21 +15,33 @@ import {
 import {
   ArrowRight,
   ArrowUpRight,
+  Bell,
+  CalendarCheck,
   CalendarDays,
   CircleUserRound,
   MapPin,
   Mail,
   Menu,
   MessageSquare,
+  MessageSquareText,
   Moon,
   Phone,
+  PhoneIncoming,
   Sun,
   X,
 } from 'lucide-react';
 import Image from 'next/image';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type ComponentType } from 'react';
 
 import ChatThread, { type ChatMessage } from '@/components/chat-thread';
+import {
+  EnvelopeIcon,
+  FOURIX_MARK_PATH,
+  InstagramIcon,
+  MessengerIcon,
+  TelegramIcon,
+  WhatsAppIcon,
+} from '@/components/flow-icons';
 
 /* ------------------------------------------------------------------ *
  * CONTENT THAT STILL NEEDS REAL INPUT BEFORE LAUNCH
@@ -262,6 +276,271 @@ const fadeUp: Variants = {
     },
   }),
 };
+
+/* ---- How it connects --------------------------------------------------- *
+ * The desktop diagram has a FIXED geometry, so the connector SVGs need no
+ * measurement and no scaling: the frame is FLOW_H tall, the five channels
+ * sit on five equal rows and the four results on four, which makes every
+ * endpoint a constant the paths can be written against. Each connector SVG
+ * renders at exactly its viewBox size, so strokes stay crisp and
+ * pathLength animates against a stable length.
+ * ------------------------------------------------------------------------ */
+const FLOW_H = 480; // must match the lg:h-[30rem] on .flow-column
+/* The connector columns are now 1fr — they soak up whatever the two pill
+   columns and the hub leave over, which is what pushes the pills out to the
+   edges. So the span is a NOMINAL viewBox width and the SVG stretches to
+   fill its cell (preserveAspectRatio="none").
+   Height stays pinned to FLOW_H, so scaleY is exactly 1 and the stroke keeps
+   its true thickness; only X is scaled, which the S-curves absorb because
+   their tangents are horizontal at both ends. */
+const FLOW_SPAN = 240;
+const FLOW_BLEED = 3; // overshoot at each end so lines meet the pill edges
+
+const flowInputs = [
+  { label: 'WhatsApp', Icon: WhatsAppIcon },
+  { label: 'Instagram', Icon: InstagramIcon },
+  { label: 'Messenger', Icon: MessengerIcon },
+  { label: 'Telegram', Icon: TelegramIcon },
+  { label: 'Email', Icon: EnvelopeIcon },
+] as const;
+
+/* Results carry their own colour so the right-hand column reads as
+   distinct outcomes rather than four grey rows. The values live as tokens
+   on .flow-stage because each one needs a darker variant in light mode to
+   stay legible on cream. */
+const flowOutputs = [
+  { label: 'Bookings confirmed', Icon: CalendarCheck, tint: 'var(--flow-ico-book)' },
+  { label: 'Missed calls recovered', Icon: PhoneIncoming, tint: 'var(--flow-ico-call)' },
+  { label: 'Reminders sent', Icon: Bell, tint: 'var(--flow-ico-bell)' },
+  { label: 'Leads followed up', Icon: MessageSquareText, tint: 'var(--flow-ico-msg)' },
+] as const;
+
+/** Row centres: five equal rows across FLOW_H, then four. */
+const FLOW_MID = FLOW_H / 2;
+const flowInY = flowInputs.map((_, i) => ((i + 0.5) * FLOW_H) / flowInputs.length);
+const flowOutY = flowOutputs.map((_, i) => ((i + 0.5) * FLOW_H) / flowOutputs.length);
+
+/* One shared timeline in seconds, so the five beats always resolve in the
+   order the section is meant to read: channels in, lines inward, the hub
+   lands, lines outward, results in. */
+const flowAt = {
+  input: (i: number) => i * 0.15,
+  lineIn: (i: number) => 0.75 + i * 0.1,
+  hub: 1.7,
+  lineOut: (i: number) => 2.2 + i * 0.1,
+  output: (i: number) => 2.7 + i * 0.1,
+};
+
+const flowPillIn = (delay: number, from: number): Variants => ({
+  hidden: { opacity: 0, x: from },
+  shown: { opacity: 1, x: 0, transition: { duration: 0.55, delay, ease: EASE_CINEMATIC } },
+});
+
+const flowDraw = (delay: number, duration = 0.7): Variants => ({
+  hidden: { pathLength: 0, opacity: 0 },
+  shown: {
+    pathLength: 1,
+    opacity: 1,
+    transition: {
+      pathLength: { duration, delay, ease: EASE_CINEMATIC },
+      opacity: { duration: 0.25, delay },
+    },
+  },
+});
+
+const flowHubIn: Variants = {
+  hidden: { opacity: 0, scale: 0.92 },
+  shown: { opacity: 1, scale: 1, transition: { duration: 0.6, delay: flowAt.hub, ease: EASE_CINEMATIC } },
+};
+
+/* The arrival beat. This flares on SCALE rather than opacity: the global
+   reduced-motion block forces `opacity: 1 !important` on everything, so an
+   opacity keyframe would leave the halo stuck at its brightest. Scale is
+   reset to none there instead, which lands on the settled look. */
+const flowHubGlow: Variants = {
+  hidden: { opacity: 0, scale: 0.8 },
+  shown: {
+    opacity: 1,
+    scale: [0.8, 1.3, 1],
+    transition: { duration: 1.5, delay: flowAt.hub, times: [0, 0.34, 1], ease: 'easeOut' },
+  },
+};
+
+/* A slow, steady turn. Linear so the speed never eases, and 0 -> 360 so the
+   loop point lands exactly where it started — no visible seam. `rest` is
+   what an offscreen (or reduced-motion) mark shows. */
+const markSpin: Variants = {
+  rest: { rotate: 0 },
+  spin: {
+    rotate: 360,
+    transition: { duration: 10, ease: 'linear', repeat: Infinity, repeatType: 'loop' },
+  },
+};
+
+/* When the section is pinned, scroll progress (0-1 across the hold) drives
+   the sequence directly, instead of a timed run. That guarantees the whole
+   thing is actually SEEN — a timed sequence can be scrolled past before it
+   finishes — and it makes back-scrolling replay it for free.
+
+   Windows are [start, end] in progress space, ordered so the five beats stay
+   in sequence. The last one lands at 0.981 — deliberately almost the whole
+   hold. They used to finish at 0.865, which left 13.5% of the pin (roughly
+   150px of scrolling) where the diagram was already complete and scrolling
+   changed nothing: the section read as frozen. Every window here is stretched
+   so that scroll always advances something right up to the release. */
+const FLOW_WINDOWS = {
+  input: (i: number): [number, number] => [0.023 + i * 0.051, 0.136 + i * 0.051],
+  lineIn: (i: number): [number, number] => [0.272 + i * 0.034, 0.453 + i * 0.034],
+  hub: [0.499, 0.657] as [number, number],
+  lineOut: (i: number): [number, number] => [0.634 + i * 0.034, 0.816 + i * 0.034],
+  output: (i: number): [number, number] => [0.748 + i * 0.04, 0.861 + i * 0.04],
+};
+
+/** Shared innards, so the timed and scroll-driven pills cannot drift apart. */
+function FlowPillBody({
+  label,
+  Icon,
+  tint,
+}: {
+  label: string;
+  Icon: ComponentType<{ className?: string }>;
+  tint?: string;
+}) {
+  return (
+    <>
+      <span className="flow-pill__icon" style={tint ? { color: tint } : undefined}>
+        <Icon className="h-[1.4rem] w-[1.4rem]" />
+      </span>
+      {label}
+    </>
+  );
+}
+
+function FlowPillPinned({
+  label,
+  Icon,
+  tint,
+  progress,
+  range,
+  drift,
+}: {
+  label: string;
+  Icon: ComponentType<{ className?: string }>;
+  tint?: string;
+  progress: MotionValue<number>;
+  range: [number, number];
+  drift: number;
+}) {
+  const opacity = useTransform(progress, range, [0, 1], { clamp: true });
+  const x = useTransform(progress, range, [drift, 0], { clamp: true });
+  return (
+    <motion.div style={{ opacity, x }} className="flow-pill">
+      <FlowPillBody label={label} Icon={Icon} tint={tint} />
+    </motion.div>
+  );
+}
+
+function FlowWirePinned({
+  d,
+  progress,
+  range,
+}: {
+  d: string;
+  progress: MotionValue<number>;
+  range: [number, number];
+}) {
+  const pathLength = useTransform(progress, range, [0, 1], { clamp: true });
+  // Snap in over the first sliver of the window so a zero-length path is
+  // never briefly visible as a dot at the pill edge.
+  const opacity = useTransform(progress, [range[0], range[0] + 0.005], [0, 1], { clamp: true });
+  return <motion.path className="flow-wires__live" d={d} style={{ pathLength, opacity }} />;
+}
+
+function FlowPill({
+  label,
+  Icon,
+  variants,
+  tint,
+}: {
+  label: string;
+  Icon: ComponentType<{ className?: string }>;
+  variants: Variants;
+  /** Results tint their line icon; channels carry their own brand fill. */
+  tint?: string;
+}) {
+  return (
+    <motion.div variants={variants} className="flow-pill">
+      <FlowPillBody label={label} Icon={Icon} tint={tint} />
+    </motion.div>
+  );
+}
+
+/**
+ * One connector cell. Above lg it draws the fan of curves between a column
+ * and the hub; below lg the fan is replaced by a single vertical line, so
+ * the horizontal layout is never crammed onto a narrow screen. Both are
+ * decorative — every label lives in the columns themselves, once.
+ */
+function FlowWires({
+  from,
+  to,
+  delay,
+  progress,
+  range,
+}: {
+  from: number[];
+  to: number[];
+  delay: (i: number) => number;
+  /** Present only while the section is pinned. */
+  progress?: MotionValue<number>;
+  range?: (i: number) => [number, number];
+}) {
+  const curves = (from.length > 1 ? from : to).map((_, i) => {
+    const y0 = from.length > 1 ? from[i] : from[0];
+    const y1 = to.length > 1 ? to[i] : to[0];
+    // Overshoot both ends by FLOW_BLEED so the stroke tucks under the pill
+    // and the hub instead of stopping a subpixel short of them. The SVG is
+    // overflow:visible so the overshoot actually paints.
+    return {
+      key: `${y0}-${y1}`,
+      d: `M${-FLOW_BLEED} ${y0} C ${FLOW_SPAN / 2} ${y0}, ${FLOW_SPAN / 2} ${y1}, ${FLOW_SPAN + FLOW_BLEED} ${y1}`,
+      i,
+    };
+  });
+
+  return (
+    <div className="flow-wires" aria-hidden="true">
+      <svg
+        className="flow-wires__fan"
+        height={FLOW_H}
+        viewBox={`0 0 ${FLOW_SPAN} ${FLOW_H}`}
+        preserveAspectRatio="none"
+        fill="none"
+      >
+        {/* Faint tracks are static, so the diagram reads as connected
+            before the sequence runs and under reduced motion. */}
+        {curves.map((c) => (
+          <path key={`t-${c.key}`} className="flow-wires__track" d={c.d} />
+        ))}
+        {curves.map((c) =>
+          progress && range ? (
+            <FlowWirePinned key={c.key} d={c.d} progress={progress} range={range(c.i)} />
+          ) : (
+            <motion.path key={c.key} className="flow-wires__live" d={c.d} variants={flowDraw(delay(c.i))} />
+          ),
+        )}
+      </svg>
+      <svg className="flow-wires__drop" width="24" height="72" viewBox="0 0 24 72" fill="none">
+        <path className="flow-wires__track" d="M12 -3 L12 75" />
+        {progress && range ? (
+          <FlowWirePinned d="M12 -3 L12 75" progress={progress} range={range(0)} />
+        ) : (
+          <motion.path className="flow-wires__live" d="M12 -3 L12 75" variants={flowDraw(delay(0), 0.9)} />
+        )}
+      </svg>
+    </div>
+  );
+}
 
 /* ---- Coverflow -------------------------------------------------------- *
  * One card of the 3D arc. Continuous properties (rotateY, x, z, scale,
@@ -529,9 +808,37 @@ export default function Home() {
     // as its end clears 60% — so the draw tracks a natural reading pace.
     offset: ['start 80%', 'end 60%'],
   });
-  const railFill = useTransform(processProgress, [0, 1], [0, 1]);
-
+  /* The rail is ONE-WAY. Reading processProgress straight would un-draw the
+     line the moment the reader nudged back up, which is the one thing a
+     progress rail must never do. railReveal only ever climbs, so every pixel
+     of downward scroll advances it and nothing takes it back. */
+  const railReveal = useMotionValue(shouldReduceMotion ? 1 : 0);
   useMotionValueEvent(processProgress, 'change', (value) => {
+    if (value > railReveal.get()) railReveal.set(value);
+  });
+
+  /* ...and it is erased ONLY when the reader is above the section entirely —
+     its top edge has dropped below the fold — so the next approach re-draws
+     fresh. At or below the section it stays complete, however far back up
+     inside it they scroll. */
+  useEffect(() => {
+    if (shouldReduceMotion) return;
+    const onScroll = () => {
+      const el = processRef.current;
+      if (!el || railReveal.get() === 0) return;
+      if (el.getBoundingClientRect().top > window.innerHeight) {
+        railReveal.set(0);
+        setLitStage(-1);
+      }
+    };
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, [railReveal, shouldReduceMotion]);
+
+  const railFill = useTransform(railReveal, [0, 1], [0, 1]);
+
+  useMotionValueEvent(railReveal, 'change', (value) => {
     if (shouldReduceMotion) return;
     const next = Math.min(process.length - 1, Math.floor(value * process.length));
     setLitStage((current) => (current === next ? current : next));
@@ -708,6 +1015,100 @@ export default function Home() {
     return () => window.removeEventListener('resize', measure);
   }, [canPin, mobilePinned, cardCount]);
 
+  /* ---- How it connects: desktop pin ------------------------------------ *
+   * Same shape as the coverflow pin, and the same spacer arithmetic:
+   *   spacer  = 100vh + travel
+   *   sticky child = h-screen
+   *   scroll consumed while pinned = spacer - 100vh = travel, exactly.
+   * So the pin releases on the frame the sequence completes and the next
+   * section starts immediately — no void at either end.
+   *
+   * `canPin` is reused rather than re-derived: it is already
+   * (min-width: 1024px) and (pointer: fine) and NOT reduced-motion, which
+   * is exactly the gate this needs. Touch, narrow, and reduced-motion all
+   * keep the unpinned replay-on-enter behaviour.
+   * ---------------------------------------------------------------------- */
+  const flowPinRef = useRef<HTMLDivElement>(null);
+  const [flowTravel, setFlowTravel] = useState(0);
+  useEffect(() => {
+    if (!canPin) {
+      setFlowTravel(0);
+      return;
+    }
+    // 1.1 viewports of runway: long enough to read the five beats without
+    // feeling like the page has stopped responding.
+    const measure = () => setFlowTravel(Math.round(window.innerHeight * 1.1));
+    measure();
+    window.addEventListener('resize', measure);
+    return () => window.removeEventListener('resize', measure);
+  }, [canPin]);
+
+  const { scrollYProgress: flowProgress } = useScroll({
+    target: flowPinRef,
+    offset: ['start start', 'end end'],
+  });
+
+  /* The section counts as "in view" while ANY part of it is on screen. The
+     previous gate was `whileInView` with amount: 0.25, which flipped BACK to
+     `hidden` the moment less than a quarter of the diagram was visible — so
+     scrolling down tore the boxes back out while the user was still looking
+     at them, leaving only the static (CSS-drawn, never animated) tracks on
+     screen. That was the "bare lines" state. */
+  const flowInView = useInView(flowPinRef, { amount: 0 });
+
+  /* One-way reveal. Children read a LATCHED copy of scroll progress that only
+     ever climbs, so nothing that has appeared can be un-drawn by scrolling —
+     not by scrolling back up inside the pin, and not by jitter in the
+     measured progress. */
+  const flowReveal = useMotionValue(0);
+  useMotionValueEvent(flowProgress, 'change', (value) => {
+    if (value > flowReveal.get()) flowReveal.set(value);
+  });
+
+  /* Latched "has been reached", for the unpinned (mobile / reduced-motion)
+     path. Once true it stays true until the reset below. */
+  const [flowShown, setFlowShown] = useState(false);
+  useEffect(() => {
+    if (flowInView) setFlowShown(true);
+  }, [flowInView]);
+
+  /* Reset ONLY when the reader is above the section — its top edge has
+     dropped below the fold — exactly the test the process rail uses.
+     This used to reset on `!flowInView`, which fires when the section leaves
+     the viewport in EITHER direction. Scrolling DOWN past it therefore zeroed
+     the reveal, so coming back UP re-entered a section with every box hidden
+     and only the static tracks painted: the bare-lines state. The section is
+     off screen whenever this fires, so the reset is never visible. */
+  useEffect(() => {
+    if (shouldReduceMotion) return;
+    const onScroll = () => {
+      const el = flowPinRef.current;
+      if (!el) return;
+      if (el.getBoundingClientRect().top > window.innerHeight) {
+        if (flowReveal.get() !== 0) flowReveal.set(0);
+        setFlowShown((current) => (current ? false : current));
+      }
+    };
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, [flowReveal, shouldReduceMotion]);
+
+  const flowHubOpacity = useTransform(flowReveal, FLOW_WINDOWS.hub, [0, 1], { clamp: true });
+  const flowHubScale = useTransform(flowReveal, FLOW_WINDOWS.hub, [0.92, 1], { clamp: true });
+  const flowGlowOpacity = useTransform(
+    flowReveal,
+    [FLOW_WINDOWS.hub[0], FLOW_WINDOWS.hub[0] + 0.04],
+    [0, 1],
+    { clamp: true },
+  );
+  const flowGlowScale = useTransform(
+    flowReveal,
+    [FLOW_WINDOWS.hub[0], FLOW_WINDOWS.hub[1], FLOW_WINDOWS.hub[1] + 0.08],
+    [0.8, 1.3, 1],
+    { clamp: true },
+  );
+
   const { scrollYProgress: railProgress } = useScroll({
     target: railSectionRef,
     offset: ['start start', 'end end'],
@@ -856,6 +1257,27 @@ export default function Home() {
       document.body.style.overflow = previousOverflow;
     };
   }, [isMobileNavOpen]);
+
+  /* Defined once so the pinned and unpinned hubs cannot drift apart. Plain
+     JSX, no hooks, so it is safe to build here. */
+  const flowMark = (
+    <motion.span
+      className="flow-hub__mark"
+      aria-hidden="true"
+      variants={markSpin}
+      {...(shouldReduceMotion
+        ? {}
+        : {
+            initial: 'rest',
+            whileInView: 'spin',
+            viewport: { once: false, amount: 0.4 },
+          })}
+    >
+      <svg viewBox="0 0 256 256">
+        <path className="flow-mark__fill" fillRule="evenodd" d={FOURIX_MARK_PATH} />
+      </svg>
+    </motion.span>
+  );
 
   return (
     // overflow-x: clip, NOT hidden. `hidden` makes this a scroll container,
@@ -1373,6 +1795,147 @@ export default function Home() {
           </div>
         </section>
 
+        {/* ------------------------------------- HOW IT CONNECTS ---- *
+          * An intentional always-dark band between "What we do" (the three
+          * automations) and "How it works" (the delivery stages): this is
+          * the "so how does it actually plug in" beat. Five channels fan
+          * into the agent, four results fan out.
+          *
+          * Above lg it is the three-column flow. Below lg the same nodes
+          * restack vertically and the fans swap for a single drawn line —
+          * the labels are rendered ONCE and reflow, only the decorative
+          * connectors are per-breakpoint.
+          * ---------------------------------------------------------- */}
+        <section id="how-it-connects" className="flow-stage">
+          {/* The ref'd spacer ALWAYS mounts, pinned or not. useScroll binds
+              its listener on the first render — if the target ref were only
+              inside the canPin branch it would bind to null, never re-attach,
+              and progress would sit frozen at 0. Only the height and the
+              frame's classes switch. */}
+          <div
+            ref={flowPinRef}
+            className="relative"
+            style={canPin ? { height: `calc(100vh + ${flowTravel}px)` } : undefined}
+          >
+            {/* Headline AND diagram sit inside the sticky frame together, so
+                what gets held is the whole framing — nothing important
+                scrolls out from under the hold. pt-[5.5rem] clears the 85px
+                fixed header. */}
+            <div className={canPin ? 'sticky top-0 flex h-screen flex-col justify-center pt-[5.5rem]' : undefined}>
+              <div
+                className={
+                  canPin
+                    ? 'mx-auto w-full max-w-7xl px-5 md:px-8'
+                    : 'mx-auto max-w-7xl px-5 py-20 md:px-8 md:py-28'
+                }
+              >
+                <motion.p {...revealIn(0)} className="section-eyebrow uppercase tracking-[0.22em]">
+                  How it connects
+                </motion.p>
+                <motion.h2
+                  {...revealIn(0.09)}
+                  className="section-display mt-5 max-w-2xl text-4xl font-normal leading-[1.1] md:text-6xl"
+                >
+                  Every channel, answered by one system.
+                </motion.h2>
+
+                <motion.div
+                  className="mt-10 md:mt-14 lg:grid lg:grid-cols-[auto_minmax(5rem,1fr)_auto_minmax(5rem,1fr)_auto] lg:items-center"
+                  {...(canPin || shouldReduceMotion
+                    ? {}
+                    : {
+                        initial: 'hidden',
+                        /* flowShown is latched: it turns on when the section
+                           is reached and off ONLY above it, so scrolling down
+                           past and back up never re-hides anything. */
+                        animate: flowShown ? 'shown' : 'hidden',
+                      })}
+                >
+                  <div className="flow-column flow-column--in">
+                    {flowInputs.map((item, index) =>
+                      canPin ? (
+                        <FlowPillPinned
+                          key={item.label}
+                          label={item.label}
+                          Icon={item.Icon}
+                          progress={flowReveal}
+                          range={FLOW_WINDOWS.input(index)}
+                          drift={-18}
+                        />
+                      ) : (
+                        <FlowPill
+                          key={item.label}
+                          label={item.label}
+                          Icon={item.Icon}
+                          variants={flowPillIn(flowAt.input(index), -18)}
+                        />
+                      ),
+                    )}
+                  </div>
+
+                  <FlowWires
+                    from={flowInY}
+                    to={[FLOW_MID]}
+                    delay={flowAt.lineIn}
+                    progress={canPin ? flowReveal : undefined}
+                    range={canPin ? FLOW_WINDOWS.lineIn : undefined}
+                  />
+
+                  {canPin ? (
+                    <motion.div style={{ opacity: flowHubOpacity, scale: flowHubScale }} className="flow-hub">
+                      <motion.span
+                        style={{ opacity: flowGlowOpacity, scale: flowGlowScale }}
+                        className="flow-hub__glow"
+                        aria-hidden="true"
+                      />
+                      {flowMark}
+                      <p className="flow-hub__name">Fourix Agent</p>
+                    </motion.div>
+                  ) : (
+                    <motion.div variants={flowHubIn} className="flow-hub">
+                      <motion.span variants={flowHubGlow} className="flow-hub__glow" aria-hidden="true" />
+                      {flowMark}
+                      <p className="flow-hub__name">Fourix Agent</p>
+                    </motion.div>
+                  )}
+
+                  <FlowWires
+                    from={[FLOW_MID]}
+                    to={flowOutY}
+                    delay={flowAt.lineOut}
+                    progress={canPin ? flowReveal : undefined}
+                    range={canPin ? FLOW_WINDOWS.lineOut : undefined}
+                  />
+
+                  <div className="flow-column flow-column--out">
+                    {flowOutputs.map((item, index) =>
+                      canPin ? (
+                        <FlowPillPinned
+                          key={item.label}
+                          label={item.label}
+                          Icon={item.Icon}
+                          tint={item.tint}
+                          progress={flowReveal}
+                          range={FLOW_WINDOWS.output(index)}
+                          drift={18}
+                        />
+                      ) : (
+                        <FlowPill
+                          key={item.label}
+                          label={item.label}
+                          Icon={item.Icon}
+                          tint={item.tint}
+                          variants={flowPillIn(flowAt.output(index), 18)}
+                        />
+                      ),
+                    )}
+                  </div>
+                </motion.div>
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* ----------------------------------------- HOW IT WORKS ---- */}
         {/* Plain section: the wrapper must never sit at opacity 0, or the
             stages would be invisible rather than dim before they are
@@ -1408,7 +1971,7 @@ export default function Home() {
                   step={step}
                   index={index}
                   count={process.length}
-                  progress={processProgress}
+                  progress={railReveal}
                   lit={index <= litStage}
                   reduced={Boolean(shouldReduceMotion)}
                 />

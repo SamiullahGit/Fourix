@@ -1343,6 +1343,265 @@
 }
 
 /* ==================================================================== *
+ * How it connects — the channel/agent/result flow
+ * ==================================================================== */
+
+/* Follows the site theme in both directions. Every value that cannot come
+   straight from a global token is declared here as a local one and given a
+   light-mode counterpart below. */
+.flow-stage {
+  --flow-wire: rgba(234, 180, 100, 0.72);
+  --flow-hub-edge: rgba(234, 180, 100, 0.34);
+  --flow-glow: rgba(234, 180, 100, 0.3);
+  --flow-glow-core: rgba(234, 180, 100, 0.42);
+  --flow-mark-color: #fafafa;
+  --flow-ico-book: #34c77b;
+  --flow-ico-call: #4c9af5;
+  --flow-ico-bell: #e0a356;
+  --flow-ico-msg: #b57bee;
+  --flow-ico-mail: #e0a356;
+
+  /* No background and no border: the section shows the page ground that
+     `body { background: var(--bg) }` paints, which is what every neighbouring
+     section shows, so it matches by construction in both themes rather than
+     by two values being kept in sync. The old radial gradient topped out at
+     #121212 (dark) / #ffffff (light) against a #050505 / #f3f1ec page, and
+     `border-block` drew the hairline at the top and bottom edges. */
+}
+
+:root[data-theme='light'] .flow-stage {
+  /* Light mode needs a deeper amber — #eab464 measures 1.66:1 on cream.
+     --rail-accent is already #8a5a12 here, which the process rail uses. */
+  --flow-wire: var(--rail-accent);
+  --flow-hub-edge: rgba(138, 90, 18, 0.38);
+  --flow-glow: rgba(138, 90, 18, 0.14);
+  --flow-glow-core: rgba(138, 90, 18, 0.2);
+  --flow-mark-color: #111111;
+  /* Darkened so each icon still clears 3:1 on white cards. */
+  --flow-ico-book: #12724a;
+  --flow-ico-call: #1a5fbf;
+  --flow-ico-bell: #8a5a12;
+  --flow-ico-msg: #6a35a6;
+  --flow-ico-mail: #8a5a12;
+}
+
+/* Mobile: channels and results wrap as pills. Desktop switches to fixed
+   rows so the connector geometry lines up exactly. */
+.flow-column {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.75rem;
+}
+
+.flow-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.8rem;
+  min-height: 4rem;
+  padding: 1rem 1.25rem;
+  border: 1px solid var(--line);
+  border-radius: 1.1rem;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 1.0625rem;
+  font-weight: 500;
+  line-height: 1.25;
+  white-space: nowrap;
+}
+
+/* Narrow screens: results carry the long labels, so they become full-width
+   cards rather than wrapping raggedly beside each other. */
+.flow-column--out .flow-pill {
+  width: 100%;
+  max-width: 22rem;
+}
+
+.flow-pill__icon {
+  display: inline-flex;
+  align-items: center;
+  flex: 0 0 auto;
+  color: var(--text-faint);
+}
+
+.flow-wires {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+}
+
+.flow-wires__fan {
+  display: none;
+  /* The paths overshoot the viewBox by 2px at each end so a subpixel
+     rounding difference can never leave a hairline gap at a pill edge. */
+  overflow: visible;
+}
+
+.flow-wires__drop {
+  display: block;
+  overflow: visible;
+}
+
+.flow-wires__track {
+  fill: none;
+  stroke: var(--rail-track);
+  stroke-width: 1;
+}
+
+/* Alpha is baked into the stroke rather than set with `opacity`, so the
+   reduced-motion overrides cannot light every connector to full amber. */
+.flow-wires__live {
+  fill: none;
+  stroke: var(--flow-wire);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+}
+
+.flow-hub {
+  position: relative;
+  isolation: isolate;
+  width: min(12rem, 100%);
+  margin: 0 auto;
+  padding: 1.35rem 1.1rem 1.15rem;
+  border: 1px solid var(--flow-hub-edge);
+  border-radius: 1.25rem;
+  background: linear-gradient(180deg, var(--surface-2), var(--surface));
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.28);
+  text-align: center;
+}
+
+/* Negative z-index paints after the panel background but under the text,
+   so the halo tints the panel and spills past its edge. */
+.flow-hub__glow {
+  position: absolute;
+  inset: -16px;
+  z-index: -1;
+  border-radius: 1.75rem;
+  background: radial-gradient(60% 60% at 50% 50%, var(--flow-glow), transparent 70%);
+  filter: blur(14px);
+  pointer-events: none;
+}
+
+/* The mark is a real vector, so it takes a colour rather than a filter.
+   The wrapper is what rotates; transform-origin is its own centre. */
+.flow-hub__mark {
+  display: block;
+  width: 3.6rem;
+  height: 3.6rem;
+  margin: 0 auto 0.7rem;
+  color: var(--flow-mark-color);
+  transform-origin: center;
+  will-change: transform;
+}
+
+.flow-hub__mark svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.flow-mark__fill {
+  fill: currentColor;
+}
+
+.flow-hub__name {
+  font-size: 1.125rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--text);
+}
+
+@media (min-width: 1024px) {
+  /* Five equal rows over exactly FLOW_H, then four, so each pill centres on
+     the y the connector paths are drawn to. Change either of these and the
+     FLOW_H / FLOW_GAP constants in page.tsx must change with them.
+
+     grid-template-columns is explicit: without it the implicit column is
+     max-content wide and the inherited `justify-content: center` centres
+     that block inside the track, which parks every pill short of the
+     connector and leaves the lines starting in empty space. */
+  /* The pinned frame has to fit inside one viewport: 5.5rem of header pad
+     plus the eyebrow, headline and the gap above the diagram come to about
+     21rem, so the diagram takes whatever is left, capped at its natural
+     30rem. At 1280x800 that yields 464px; at 900px and taller it is the
+     full 30rem.
+
+     .flow-column and .flow-wires__fan MUST stay the same height. The fan's
+     viewBox maps its endpoints onto the column's row centres and
+     preserveAspectRatio is "none", so any mismatch slides every line off
+     the pills it is supposed to touch. */
+  .flow-stage {
+    --flow-h: min(30rem, calc(100svh - 21rem));
+  }
+
+  .flow-column {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    height: var(--flow-h);
+    gap: 0;
+  }
+
+  .flow-column--in {
+    grid-template-rows: repeat(5, 1fr);
+    justify-items: end;
+  }
+
+  .flow-column--out {
+    grid-template-rows: repeat(4, 1fr);
+    justify-items: start;
+  }
+
+  .flow-column > * {
+    align-self: center;
+  }
+
+  /* Fixed widths make each set internally consistent AND size the `auto`
+     grid columns, which is what the 1fr connectors measure against. */
+  .flow-column--in .flow-pill {
+    width: 13.5rem;
+  }
+
+  .flow-column--out .flow-pill {
+    width: 19rem;
+    max-width: none;
+    /* Fixed width plus nowrap would push the longest label out of the card
+       if the measured text runs wider than expected. Wrapping is the safe
+       failure: align-self keeps the pill centred on its row either way, so
+       the line anchors do not move. */
+    white-space: normal;
+    text-wrap: balance;
+  }
+
+  .flow-wires__fan {
+    display: block;
+    width: 100%;
+    height: var(--flow-h);
+  }
+
+  .flow-wires__drop {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* The draw sequence is never mounted under reduced motion (the parent
+     drops its variants), so no dash is ever written. Pinned anyway in case
+     a path is animated outside that gate. The hub goes completely still. */
+  .flow-wires__live {
+    stroke-dasharray: none !important;
+    stroke-dashoffset: 0 !important;
+  }
+
+  /* The spin is never mounted under reduced motion (the mark drops its
+     variants), so it simply never turns. Pinned here regardless. */
+  .flow-hub__mark {
+    animation: none !important;
+    transform: none !important;
+  }
+}
+
+/* ==================================================================== *
  * Reduced motion
  * ==================================================================== */
 
