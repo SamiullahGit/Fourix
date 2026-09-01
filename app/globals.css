@@ -1201,6 +1201,7 @@
 /* Compact, flat phone carousel. This is intentionally isolated below md:
    desktop keeps the pinned 3D coverflow and its existing layout unchanged. */
 @media (max-width: 767px) {
+
   .hero-backdrop__poster,
   .hero-backdrop__video {
     position: absolute;
@@ -1215,132 +1216,145 @@
     /* The poster remains visible until the browser has a frame to paint. */
     background: transparent;
   }
-
-  .mobile-chat-carousel {
-    overflow: hidden;
-    overflow-y: hidden;
-    padding-bottom: 1.5rem;
-  }
-
-  .mobile-chat-carousel__copy {
-    position: sticky;
-    top: 0;
-    z-index: 10;
-    background: var(--bg);
-    min-height: 6.85rem;
-    max-width: 23rem;
-    margin: 0 auto 1.25rem;
-    padding: 1rem 1.25rem;
-    text-align: center;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  }
-
-  /* While the section is pinned, scroll progress drives the rail. Native
-     snap and touch panning are switched off so the two cannot fight each
-     other; the free-swipe version below is what reduced-motion gets. */
-  /* Pinned: a transform moves the rail, so it must not be a scroll
-     container at all. overflow:visible removes every horizontal scroll
-     surface, snap and overscroll-containment that could swallow a swipe
-     or fight the transform. */
-  .mobile-chat-carousel--pinned .mobile-chat-carousel__rail {
-    overflow: visible;
-    scroll-snap-type: none;
-    overscroll-behavior: auto;
-    touch-action: pan-y;
-    will-change: transform;
-  }
-
-  /* Nothing inside the mock device should intercept a page swipe. */
-  .mobile-chat-carousel--pinned .phone {
-    touch-action: pan-y;
-  }
-
-  .mobile-chat-carousel--pinned .mobile-chat-carousel__copy {
-    position: static;
-    box-shadow: none;
-  }
-
-  /* 75svh overflows the pinned frame once the header pad, caption and dots
-     are reserved. 262px = 72 header + 130 caption+margin + 40 dots + 20
-     slack, so the phone always fits the hold with room to breathe. */
-  .mobile-chat-carousel--pinned .mobile-chat-carousel__slide .phone {
-    height: min(34rem, calc(100svh - 262px));
-  }
-
-  .mobile-chat-carousel__rail {
-    display: flex;
-    gap: 1rem;
-    overflow-x: auto;
-    overflow-y: hidden;
-    scroll-snap-type: x mandatory;
-    scroll-padding-inline: 12.5vw;
-    /* Contain the HORIZONTAL axis only. Plain 'contain' also blocks
-       vertical chaining, so a swipe starting on the rail could never
-       scroll the page — the band around the phone felt dead while the
-       areas above and below worked. */
-    overscroll-behavior-x: contain;
-    overscroll-behavior-y: auto;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-  }
-
-  .mobile-chat-carousel__rail::-webkit-scrollbar {
-    display: none;
-  }
-
-  .mobile-chat-carousel__slide {
-    display: flex;
-    justify-content: center;
-    flex: 0 0 100%;
-    scroll-snap-align: center;
-    scroll-snap-stop: always;
-    padding: 0 1.25rem;
-  }
-
-  .mobile-chat-carousel__slide .phone {
-    height: min(34rem, 75svh);
-    max-height: none;
-    box-shadow: 0 24px 48px rgba(0, 0, 0, 0.42);
-  }
-
-  .mobile-chat-carousel__dots {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.55rem;
-    margin-top: 1.25rem;
-  }
-
-  .mobile-chat-carousel__dot {
-    position: relative;
-    /* Keep the mark small, but give each pagination control a reliable
-       44px touch target (and a normally visible :focus-visible outline). */
-    width: 2.75rem;
-    height: 2.75rem;
-    padding: 0;
-    border: 0;
-    background: transparent;
-    cursor: pointer;
-  }
-
-  .mobile-chat-carousel__dot::after {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 0.5rem;
-    height: 0.5rem;
-    border-radius: 999px;
-    transform: translate(-50%, -50%);
-    background: var(--line-strong);
-    transition: width 0.2s ease, background-color 0.2s ease;
-  }
-
-  .mobile-chat-carousel__dot--on::after {
-    width: 1.35rem;
-    background: var(--text-muted);
-  }
 }
+
+/* ==================================================================== *
+ * Compact phone carousel
+ * ==================================================================== */
+
+/* These used to live inside @media (max-width: 767px). The media query was
+   redundant scoping: .mobile-chat-carousel markup is only ever RENDERED in
+   the compact branch, so the rules are inert everywhere else. Lifting them
+   out is what lets the compact presentation work on a phone using "request
+   desktop site", where the browser reports a ~980px width and the media
+   query would never match. Real mobile and real desktop are unaffected —
+   one still renders the markup, the other still never does. */
+
+.mobile-chat-carousel {
+  overflow: hidden;
+  overflow-y: hidden;
+  padding-bottom: 1.5rem;
+}
+
+.mobile-chat-carousel__copy {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--bg);
+  min-height: 6.85rem;
+  max-width: 23rem;
+  margin: 0 auto 1.25rem;
+  padding: 1rem 1.25rem;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* While the section is pinned, scroll progress drives the rail. Native
+   snap and touch panning are switched off so the two cannot fight each
+   other; the free-swipe version below is what reduced-motion gets. */
+/* Pinned: a transform moves the rail, so it must not be a scroll
+   container at all. overflow:visible removes every horizontal scroll
+   surface, snap and overscroll-containment that could swallow a swipe
+   or fight the transform. */
+.mobile-chat-carousel--pinned .mobile-chat-carousel__rail {
+  overflow: visible;
+  scroll-snap-type: none;
+  overscroll-behavior: auto;
+  touch-action: pan-y;
+  will-change: transform;
+}
+
+/* Nothing inside the mock device should intercept a page swipe. */
+.mobile-chat-carousel--pinned .phone {
+  touch-action: pan-y;
+}
+
+.mobile-chat-carousel--pinned .mobile-chat-carousel__copy {
+  position: static;
+  box-shadow: none;
+}
+
+/* 75svh overflows the pinned frame once the header pad, caption and dots
+   are reserved. 262px = 72 header + 130 caption+margin + 40 dots + 20
+   slack, so the phone always fits the hold with room to breathe. */
+.mobile-chat-carousel--pinned .mobile-chat-carousel__slide .phone {
+  height: min(34rem, calc(100svh - 262px));
+}
+
+.mobile-chat-carousel__rail {
+  display: flex;
+  gap: 1rem;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+  scroll-padding-inline: 12.5vw;
+  /* Contain the HORIZONTAL axis only. Plain 'contain' also blocks
+     vertical chaining, so a swipe starting on the rail could never
+     scroll the page — the band around the phone felt dead while the
+     areas above and below worked. */
+  overscroll-behavior-x: contain;
+  overscroll-behavior-y: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.mobile-chat-carousel__rail::-webkit-scrollbar {
+  display: none;
+}
+
+.mobile-chat-carousel__slide {
+  display: flex;
+  justify-content: center;
+  flex: 0 0 100%;
+  scroll-snap-align: center;
+  scroll-snap-stop: always;
+  padding: 0 1.25rem;
+}
+
+.mobile-chat-carousel__slide .phone {
+  height: min(34rem, 75svh);
+  max-height: none;
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.42);
+}
+
+.mobile-chat-carousel__dots {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  margin-top: 1.25rem;
+}
+
+.mobile-chat-carousel__dot {
+  position: relative;
+  /* Keep the mark small, but give each pagination control a reliable
+     44px touch target (and a normally visible :focus-visible outline). */
+  width: 2.75rem;
+  height: 2.75rem;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.mobile-chat-carousel__dot::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 999px;
+  transform: translate(-50%, -50%);
+  background: var(--line-strong);
+  transition: width 0.2s ease, background-color 0.2s ease;
+}
+
+.mobile-chat-carousel__dot--on::after {
+  width: 1.35rem;
+  background: var(--text-muted);
+}
+
 
 /* ==================================================================== *
  * How it connects — the channel/agent/result flow

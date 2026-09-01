@@ -863,11 +863,43 @@ export default function Home() {
     return () => query.removeEventListener('change', sync);
   }, []);
 
+  /* "Request desktop site" on a phone makes the browser report a ~980-1024px
+     CSS width while the hardware is still ~390px across. Width media queries
+     therefore hand a phone the desktop layout, and the three mockups get
+     crammed into a squished row. window.screen reports the PHYSICAL screen
+     and does NOT change in that mode, so it can tell the two apart.
+
+     Deliberately conservative — BOTH conditions are required:
+       - a coarse/touch pointer, and
+       - a genuinely small physical screen (shorter side under 500px).
+     A real laptop fails both. A touchscreen laptop passes the first and
+     fails the second. A tablet (iPad's shorter side is 768+) fails the
+     second. Anything uncertain leaves this false and the desktop layout
+     alone, which is the safe direction to be wrong in.
+
+     Starts false so the server and the first client render agree — no
+     hydration mismatch; it only ever adjusts after mount. */
+  const [smallDevice, setSmallDevice] = useState(false);
+  useEffect(() => {
+    const measure = () => {
+      const coarse = window.matchMedia('(pointer: coarse)').matches || navigator.maxTouchPoints > 0;
+      const shorterSide = Math.min(window.screen.width, window.screen.height);
+      setSmallDevice(coarse && shorterSide > 0 && shorterSide < 500);
+    };
+    measure();
+    window.addEventListener('resize', measure);
+    return () => window.removeEventListener('resize', measure);
+  }, []);
+
+  /* Scoped to the phones section ONLY. The hero keeps plain `isMobile`, and
+     `canPin` is untouched so the flow section's pin is unaffected. */
+  const compactPhones = isMobile || smallDevice;
+
   // Native scroll-snap does the movement. This only reflects the centred
   // snap item in the label, dots, and which chat loop is allowed to play.
   useEffect(() => {
     const rail = mobileRailRef.current;
-    if (!isMobile || !rail) return;
+    if (!compactPhones || !rail) return;
 
     let frame = 0;
     const updateActiveCard = () => {
@@ -898,13 +930,13 @@ export default function Home() {
       window.removeEventListener('resize', updateActiveCard);
       if (frame) window.cancelAnimationFrame(frame);
     };
-  }, [isMobile]);
+  }, [compactPhones]);
 
   // Mobile carousel scroll-lock: convert vertical scroll to horizontal movement
   // until all cards are shown, then release scroll lock.
   useEffect(() => {
     const rail = mobileRailRef.current;
-    if (!isMobile || !rail) return;
+    if (!compactPhones || !rail) return;
 
     const SCROLL_MULTIPLIER = 1.5; // Higher = more responsive carousel movement
 
@@ -937,12 +969,12 @@ export default function Home() {
     return () => {
       rail.removeEventListener('wheel', handleWheel);
     };
-  }, [isMobile]);
+  }, [compactPhones]);
 
   /* The mobile carousel pins the same way the desktop coverflow does:
      hold the section, advance the rail one phone per slice of the hold,
      then release. Reduced motion keeps the free-swipe carousel. */
-  const mobilePinned = isMobile && allowMotion;
+  const mobilePinned = compactPhones && allowMotion;
   const sectionPinned = canPin || mobilePinned;
 
   /* Move the rail with a transform, not scrollLeft. Several mobile engines
@@ -1460,7 +1492,10 @@ export default function Home() {
             className="relative"
             style={sectionPinned ? { height: `calc(100vh + ${railTravel}px)` } : undefined}
           >
-            {canPin ? (
+            {/* compactPhones is checked first: on a phone in desktop-site mode
+                the coverflow must not win even if the faked width and a
+                spoofed pointer would otherwise satisfy canPin. */}
+            {canPin && !compactPhones ? (
               // pt-[5.5rem] clears the fixed site header, which otherwise
               // overlays the caption at every viewport under ~1000px.
               <div className="sticky top-0 flex h-screen flex-col items-center justify-center pt-[5.5rem]">
@@ -1509,7 +1544,7 @@ export default function Home() {
                   ))}
                 </div>
               </div>
-            ) : isMobile ? (
+            ) : compactPhones ? (
               <div
                 className={
                   mobilePinned
