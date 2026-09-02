@@ -106,7 +106,7 @@ export default function FourixAgent() {
       setMessages([...next, { role: 'assistant', content: data.reply }])
     } catch (cause) {
       if (cause instanceof Error && cause.name === 'AbortError') return
-      setError(cause instanceof Error && cause.message !== 'chat failed' ? cause.message : 'The agent is taking a quick reset. You can try again, or book a call below.')
+      setError(cause instanceof Error && cause.message !== 'chat failed' ? cause.message : 'The agent is taking a quick reset. You can try again, book a call below, or visit the FAQ for answers to common questions.')
     } finally {
       if (abortControllerRef.current === controller) abortControllerRef.current = null
       setTyping(false)

@@ -153,7 +153,7 @@ export async function POST(request: Request) {
     }
 
     const apiKey = process.env.GEMINI_API_KEY
-    if (!apiKey) return json({ error: 'The agent is taking a short break. Please book a quick call instead.' }, 503)
+    if (!apiKey) return json({ error: 'The agent is taking a short break. Please book a quick call, or visit the FAQ for answers to common questions.' }, 503)
     /* Only USER turns from the client are trusted. Assistant turns are
        dropped, not rejected — a real client sends them and the chat must keep
        working, but nothing the client CLAIMS the model said is fed back in.
