@@ -145,7 +145,7 @@ export default function FourixAgent() {
       {!open && nudgeIndex !== null && nudgeDirection ? <div id="fourix-agent-nudge" className={`fourix-agent__nudge fourix-agent__nudge--${nudgeDirection}`} role="status" aria-live="polite"><svg className="fourix-agent__thought-cloud" viewBox="0 0 180 100" preserveAspectRatio="none" aria-hidden="true"><path d="M28 28C25 17 36 8 48 12C55 1 70 2 77 12C87 2 103 5 106 16C119 10 132 17 131 29C146 28 154 39 149 49C159 59 151 73 139 73C136 87 119 92 108 82C98 94 80 91 76 80C63 87 48 81 48 69C34 74 21 65 25 54C12 48 15 33 28 28Z" /></svg><span className="fourix-agent__thought-text">{nudgeMessages[nudgeIndex]}</span></div> : null}
       <button type="button" className="fourix-agent__bubble-button" data-nudge-active={!open && nudgeIndex !== null} data-nudge-direction={nudgeDirection ?? 'idle'} onClick={() => setOpen((value) => !value)} aria-expanded={open} aria-controls="fourix-agent-dialog" aria-describedby={!open && nudgeIndex !== null ? 'fourix-agent-nudge' : undefined} aria-label={open ? 'Close Fourix Agent' : 'Open Fourix Agent'}>
         {open ? <X size={24} /> : <span className="fourix-agent__icon-stage" aria-hidden="true">
-          <Image src="/Iccon.png" alt="" width={56} height={56} className="fourix-agent__brand-icon" />
+          <Image src="/Iccon.png" alt="" width={56} height={56} className="fourix-agent__brand-icon" loading="eager" />
           <Image src={nudgeDirection === 'top' ? '/robot_blink_hand_up.gif' : '/robot_blink_hand_left.gif'} alt="" width={64} height={64} className={`fourix-agent__nudge-icon fourix-agent__nudge-icon--${nudgeDirection ?? 'idle'}`} />
           <span className="fourix-agent__pulse" />
         </span>}
