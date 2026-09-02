@@ -195,10 +195,10 @@ export async function POST(request: Request) {
         cache: 'no-store',
         signal: upstreamController.signal,
       })
-      if (!response.ok) return json({ error: 'The agent is having a quick reset. Please try again or book a call.' }, 502)
+      if (!response.ok) return json({ error: 'The agent is having a quick reset. Please try again, book a call, or visit the FAQ for answers.' }, 502)
       const result = await response.json()
       const reply = result?.candidates?.[0]?.content?.parts?.[0]?.text
-      if (typeof reply !== 'string' || !reply.trim()) return json({ error: 'The agent could not find a reply. Please try again or book a call.' }, 502)
+      if (typeof reply !== 'string' || !reply.trim()) return json({ error: 'The agent could not find a reply. Please try again, book a call, or visit the FAQ for answers.' }, 502)
       if (leaksPrompt(reply)) {
         return json({ reply: "Let's keep this about Fourix. What would you like automated - missed calls, reminders, or inquiry follow-up?" })
       }
@@ -206,7 +206,7 @@ export async function POST(request: Request) {
     } catch (cause) {
       if (request.signal.aborted) return new Response(null, { status: 499 })
       if (timedOut || (cause instanceof Error && cause.name === 'AbortError')) {
-        return json({ error: 'The agent took too long to respond. Please try again or book a call.' }, 504)
+        return json({ error: 'The agent took too long to respond. Please try again, book a call, or visit the FAQ for answers.' }, 504)
       }
       throw cause
     } finally {
@@ -215,6 +215,6 @@ export async function POST(request: Request) {
     }
   } catch {
     if (request.signal.aborted) return new Response(null, { status: 499 })
-    return json({ error: 'The agent is having a quick reset. Please try again or book a call.' }, 500)
+    return json({ error: 'The agent is having a quick reset. Please try again, book a call, or visit the FAQ for answers.' }, 500)
   }
 }
