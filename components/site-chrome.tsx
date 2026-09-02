@@ -24,32 +24,38 @@ export const baseNavLinks: readonly NavLink[] = [
   { href: '#book', label: 'Contact' },
 ];
 
+/**
+ * All four glyphs are served from /public. They used to be hotlinked from
+ * cdn.simpleicons.org, which is a third party in the render path of every
+ * page: a compromise there could serve hostile SVG, and that CDN has already
+ * broken once (it dropped LinkedIn and started 404ing). Self-hosting also
+ * lets the CSP drop its `img-src https:` wildcard. Same white glyphs, so the
+ * footer is pixel-identical.
+ */
 export const footerSocials = [
   {
     name: 'Facebook',
     href: 'https://www.facebook.com/share/1EdSgaohqx/',
     bg: 'bg-[#1877F2]',
-    logo: 'https://cdn.simpleicons.org/facebook/ffffff',
+    logo: '/logo-facebook.svg',
   },
   {
     name: 'LinkedIn',
     href: 'https://www.linkedin.com/company/fourix-ai/',
     bg: 'bg-[#0A66C2]',
-    // Local, not cdn.simpleicons.org: that CDN 404s for linkedin since the
-    // brand was dropped from the set, which showed a broken-image icon.
     logo: '/logo-linkedin.svg',
   },
   {
     name: 'Instagram',
     href: 'https://www.instagram.com/fourix.ai?igsh=MzY5eTF2ZDk0OHg4',
     bg: 'bg-[radial-gradient(circle_at_30%_107%,#fdf497_0%,#fdf497_5%,#fd5949_45%,#d6249f_60%,#285AEB_90%)]',
-    logo: 'https://cdn.simpleicons.org/instagram/ffffff',
+    logo: '/logo-instagram.svg',
   },
   {
     name: 'Gmail',
     href: 'mailto:contact.fourix@gmail.com',
     bg: 'bg-[#EA4335]',
-    logo: 'https://cdn.simpleicons.org/gmail/ffffff',
+    logo: '/logo-gmail.svg',
   },
 ] as const;
 

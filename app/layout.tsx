@@ -1,6 +1,7 @@
 import { Analytics } from '@vercel/analytics/next'
 import type { Metadata, Viewport } from 'next'
 import { Manrope } from 'next/font/google'
+import FourixAgentLoader from '@/components/fourix-agent-loader'
 import './globals.css'
 
 // Variable Manrope, self-hosted at build time by next/font — no runtime
@@ -58,6 +59,7 @@ export default function RootLayout({
          */}
         <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
         {children}
+        <FourixAgentLoader />
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>
     </html>

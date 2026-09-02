@@ -1616,6 +1616,149 @@
 }
 
 /* ==================================================================== *
+ * Fourix Agent
+ * ==================================================================== */
+
+.fourix-agent {
+  --agent-button-size: 5rem;
+  --agent-panel-gap: 0.55rem;
+  --agent-bottom-inset: max(4.25rem, calc(4.25rem + env(safe-area-inset-bottom)));
+  --agent-header-clearance: 5.35rem;
+  position: fixed;
+  right: max(4.25rem, calc(4.25rem + env(safe-area-inset-right)));
+  bottom: var(--agent-bottom-inset);
+  z-index: 70;
+  font-family: var(--font-manrope), sans-serif;
+}
+
+.fourix-agent__bubble-button {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  width: var(--agent-button-size);
+  height: var(--agent-button-size);
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  background: #171717;
+  color: #f7f4ee;
+  box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.28), 0 0 0 0.35rem rgba(234, 180, 100, 0.1);
+  cursor: pointer;
+  transition: transform 180ms ease, box-shadow 180ms ease;
+}
+
+.fourix-agent__bubble-button:hover { transform: translateY(-3px); box-shadow: 0 1.25rem 3.5rem rgba(0, 0, 0, 0.34), 0 0 0 0.45rem rgba(234, 180, 100, 0.16); }
+.fourix-agent__bubble-button:focus-visible, .fourix-agent button:focus-visible, .fourix-agent a:focus-visible, .fourix-agent textarea:focus-visible { outline: 3px solid var(--rail-accent); outline-offset: 3px; }
+.fourix-agent__icon-stage { position: relative; display: grid; width: 4.1rem; height: 4.1rem; place-items: center; perspective: 12rem; }
+.fourix-agent__icon-stage img { grid-area: 1 / 1; width: 3.25rem; height: 3.25rem; border-radius: 50%; object-fit: cover; }
+.fourix-agent__brand-icon, .fourix-agent__nudge-icon { transition: opacity 420ms cubic-bezier(0.22, 1, 0.36, 1), transform 520ms cubic-bezier(0.22, 1, 0.36, 1), filter 420ms ease; }
+.fourix-agent__brand-icon { opacity: 1; transform: rotateY(0deg) scale(1); backface-visibility: hidden; }
+.fourix-agent__nudge-icon { width: 3.7rem !important; height: 3.7rem !important; opacity: 0; transform: scale(0.38) rotate(-18deg) translateY(0.35rem); object-fit: contain !important; backface-visibility: hidden; }
+.fourix-agent__bubble-button[data-nudge-active="true"] .fourix-agent__brand-icon { opacity: 0; transform: rotateY(92deg) scale(0.72); filter: blur(1px); }
+.fourix-agent__bubble-button[data-nudge-active="true"] .fourix-agent__nudge-icon { opacity: 1; transform: scale(1) rotate(0deg) translateY(0); animation: fourix-agent-robot-life 3.4s ease-in-out 520ms infinite; }
+.fourix-agent__blink-icon { width: 3.7rem !important; height: 3.7rem !important; opacity: 0; transform: scale(1) rotate(0deg) translateY(0); object-fit: contain !important; backface-visibility: hidden; pointer-events: none; }
+.fourix-agent__bubble-button[data-nudge-active="true"] .fourix-agent__blink-icon { animation: fourix-agent-robot-life 3.4s ease-in-out 520ms infinite, fourix-agent-blink 3.4s ease-in-out 520ms infinite; }
+.fourix-agent__pulse { position: absolute; right: 0.55rem; top: 0.55rem; width: 0.5rem; height: 0.5rem; border: 2px solid #171717; border-radius: 50%; background: #84c98c; transition: opacity 220ms ease, transform 300ms ease; }
+.fourix-agent__bubble-button[data-nudge-active="true"] .fourix-agent__pulse { opacity: 0; transform: scale(0.5); }
+.fourix-agent__nudge { position: absolute; z-index: 2; right: calc(100% + 0.8rem); bottom: 50%; display: flex; width: fit-content; min-width: 15rem; max-width: min(17rem, calc(100vw - 7rem)); min-height: 5.75rem; align-items: center; justify-content: center; padding: 1.25rem 2rem; transform: translateY(50%); color: var(--text); font-size: 0.72rem; line-height: 1.45; text-align: center; text-wrap: balance; animation: fourix-agent-nudge-in-left 360ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+.fourix-agent__thought-cloud { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.fourix-agent__thought-cloud path { fill: color-mix(in srgb, var(--surface-2) 94%, #171717); stroke: color-mix(in srgb, var(--rail-accent) 46%, var(--line)); stroke-width: 1.5; vector-effect: non-scaling-stroke; }
+.fourix-agent__thought-text { position: relative; z-index: 1; display: block; max-width: 100%; overflow-wrap: break-word; }
+.fourix-agent__nudge::before, .fourix-agent__nudge::after { position: absolute; z-index: 3; border: 1px solid color-mix(in srgb, var(--rail-accent) 62%, var(--line)); border-radius: 50%; background: var(--surface-2); content: ''; }
+.fourix-agent__nudge::before { right: 0; top: 58%; width: 0.42rem; height: 0.42rem; }
+.fourix-agent__nudge::after { right: -0.75rem; top: 70%; width: 0.24rem; height: 0.24rem; }
+.fourix-agent__nudge--left {
+  /* The left-hand robot points from its upper-left fingertip, not its centre. */
+  right: calc(100% + 0.38rem);
+  bottom: calc(50% + 2.35rem);
+}
+.fourix-agent__nudge--left::before { right: 0.25rem; top: 73%; width: 0.5rem; height: 0.5rem; }
+.fourix-agent__nudge--left::after { right: -0.85rem; top: 87%; width: 0.32rem; height: 0.32rem; }
+.fourix-agent__nudge--top {
+  /* The upward-hand fingertip is 4px right and 6px higher than the left pose. */
+  right: calc(100% + 0.13rem);
+  bottom: calc(50% + 2.72rem);
+  left: auto;
+  width: fit-content;
+  min-width: 15rem;
+  max-width: min(17rem, calc(100vw - 2rem));
+  transform: translateY(50%);
+  animation-name: fourix-agent-nudge-in-left;
+}
+.fourix-agent__nudge--top {
+  /* The upward robot's finger sits left of centre and below the cloud. */
+  bottom: calc(100% + 0.25rem);
+}
+.fourix-agent__nudge--top::before { top: 73%; right: 0.25rem; bottom: auto; left: auto; width: 0.5rem; height: 0.5rem; }
+.fourix-agent__nudge--top::after { top: 87%; right: -0.85rem; bottom: auto; left: auto; width: 0.32rem; height: 0.32rem; }
+.fourix-agent__nudge--right { right: auto; bottom: 50%; left: calc(100% + 0.8rem); border-radius: 1.15rem 1.15rem 0.45rem 1.15rem; animation-name: fourix-agent-nudge-in-right; }
+.fourix-agent__nudge--right::before { right: auto; top: 58%; left: -0.78rem; }
+.fourix-agent__nudge--right::after { top: 68%; right: auto; left: -1.2rem; }
+@keyframes fourix-agent-blink { 0%, 38%, 43%, 100% { opacity: 0; } 40%, 41% { opacity: 0.95; } }
+@keyframes fourix-agent-nudge-in-left { from { opacity: 0; transform: translate(0.5rem, 50%); } to { opacity: 1; transform: translateY(50%); } }
+@keyframes fourix-agent-nudge-in-top { from { opacity: 0; transform: translate(-50%, 0.5rem); } to { opacity: 1; transform: translate(-50%, 0); } }
+@keyframes fourix-agent-nudge-in-pointer { from { opacity: 0; transform: translateY(0.5rem); } to { opacity: 1; transform: translateY(0); } }
+@keyframes fourix-agent-nudge-in-right { from { opacity: 0; transform: translate(-0.5rem, 50%); } to { opacity: 1; transform: translateY(50%); } }
+@keyframes fourix-agent-robot-life { 0%, 100% { transform: scale(1) rotate(0deg) translateY(0); } 18% { transform: scale(1.02) rotate(-2deg) translateY(-0.08rem); } 36% { transform: scale(1) rotate(2deg) translateY(0); } 54% { transform: scale(1.01) rotate(0deg) translateY(-0.18rem); } 72% { transform: scale(1) rotate(-1deg) translateY(0); } }
+
+.fourix-agent__panel {
+  display: flex;
+  width: min(23rem, calc(100vw - 2rem));
+  /* Keep the fixed header controls clear without reducing the chat width. */
+  height: min(40rem, calc(100dvh - var(--agent-header-clearance) - var(--agent-bottom-inset) - var(--agent-button-size) - var(--agent-panel-gap)));
+  margin-bottom: var(--agent-panel-gap);
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 1.4rem;
+  background: var(--bg);
+  color: var(--text);
+  box-shadow: 0 1.5rem 4rem rgba(0, 0, 0, 0.3);
+}
+
+.fourix-agent__header { display: flex; align-items: center; justify-content: space-between; padding: 1rem 1rem 0.95rem; border-bottom: 1px solid var(--line); background: #171717; color: #f7f4ee; }
+.fourix-agent__identity { display: flex; align-items: center; gap: 0.7rem; }
+.fourix-agent__header-actions { display: flex; align-items: center; gap: 0.15rem; }
+.fourix-agent__identity strong, .fourix-agent__identity span { display: block; }
+.fourix-agent__identity strong { font-size: 0.86rem; letter-spacing: 0.01em; }
+.fourix-agent__identity span { margin-top: 0.12rem; color: #a9a69d; font-size: 0.66rem; letter-spacing: 0.12em; text-transform: uppercase; }
+.fourix-agent__mark { width: 2.2rem; height: 2.2rem; border-radius: 0.65rem; object-fit: cover; }
+.fourix-agent__close { display: grid; width: 2.2rem; height: 2.2rem; place-items: center; border: 0; border-radius: 0.65rem; background: transparent; color: #d8d3c9; cursor: pointer; }
+.fourix-agent__close:hover { background: rgba(255, 255, 255, 0.1); }
+.fourix-agent__panel--transparent { background: color-mix(in srgb, var(--bg) 48%, transparent); backdrop-filter: blur(12px); }
+.fourix-agent__panel--transparent .fourix-agent__header { background: color-mix(in srgb, #171717 72%, transparent); }
+.fourix-agent__panel--transparent .fourix-agent__bubble--assistant { background: color-mix(in srgb, var(--surface) 58%, transparent); }
+.fourix-agent__panel--transparent .fourix-agent__composer { background: color-mix(in srgb, var(--surface-2) 64%, transparent); }
+.fourix-agent__body { flex: 1; overflow-y: auto; padding: 1rem; }
+.fourix-agent__status { margin-bottom: 0.8rem; color: var(--text-faint); font-size: 0.6rem; letter-spacing: 0.16em; }
+.fourix-agent__status span { display: inline-block; width: 0.35rem; height: 0.35rem; margin-left: 0.35rem; border-radius: 50%; background: #84c98c; }
+.fourix-agent__bubble { max-width: 88%; margin: 0.55rem 0; padding: 0.7rem 0.8rem; border-radius: 0.9rem; font-size: 0.78rem; line-height: 1.6; white-space: pre-wrap; }
+.fourix-agent__bubble--assistant { border: 1px solid var(--line); background: var(--surface); }
+.fourix-agent__bubble--user { margin-left: auto; background: var(--rail-accent); color: #171717; }
+.fourix-agent__typing { display: flex; width: fit-content; gap: 0.25rem; padding: 0.8rem; border: 1px solid var(--line); border-radius: 0.9rem; background: var(--surface); }
+.fourix-agent__typing i { width: 0.32rem; height: 0.32rem; border-radius: 50%; background: var(--rail-accent); animation: fourix-agent-bounce 900ms infinite ease-in-out; }
+.fourix-agent__typing i:nth-child(2) { animation-delay: 120ms; }.fourix-agent__typing i:nth-child(3) { animation-delay: 240ms; }
+@keyframes fourix-agent-bounce { 0%, 60%, 100% { transform: translateY(0); opacity: 0.45; } 30% { transform: translateY(-3px); opacity: 1; } }
+.fourix-agent__error { margin-top: 0.7rem; color: #d77668; font-size: 0.72rem; line-height: 1.5; }
+.fourix-agent__calendly { display: flex; width: fit-content; align-items: center; justify-content: center; gap: 0.35rem; margin: 0 auto 0.7rem; padding: 0.62rem 1.35rem; border: 1px solid var(--rail-accent); border-radius: 999px; color: var(--rail-accent); font-size: 0.75rem; font-weight: 700; text-decoration: none; }
+.fourix-agent__calendly:hover { background: var(--rail-accent); color: #171717; }
+.fourix-agent__composer { display: flex; align-items: center; gap: 0.65rem; margin: 0 1rem; padding: 0.45rem 0.45rem 0.45rem 0.85rem; border: 1px solid var(--line); border-radius: 1rem; background: var(--surface-2); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03); transition: border-color 160ms ease, box-shadow 160ms ease; }
+.fourix-agent__composer:focus-within { border-color: color-mix(in srgb, var(--rail-accent) 58%, var(--line)); box-shadow: 0 0 0 3px color-mix(in srgb, var(--rail-accent) 18%, transparent), inset 0 1px 0 rgba(255, 255, 255, 0.03); }
+.fourix-agent__composer textarea { min-width: 0; width: 100%; min-height: 2.5rem; max-height: 5rem; padding: 0.62rem 0; resize: none; border: 0; outline: 0; background: transparent; color: var(--text); font: inherit; font-size: 0.78rem; line-height: 1.45; }
+.fourix-agent__composer textarea::placeholder { color: var(--text-faint); opacity: 1; }
+.fourix-agent__composer textarea:focus-visible { outline: 0; }
+.fourix-agent__composer button { display: grid; width: 2.75rem; height: 2.75rem; min-width: 2.75rem; flex: 0 0 auto; place-items: center; border: 1px solid color-mix(in srgb, var(--rail-accent) 72%, transparent); border-radius: 50%; background: var(--rail-accent); color: #171717; cursor: pointer; transition: background-color 160ms ease, border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease; }
+.fourix-agent__composer button:hover:not(:disabled) { background: color-mix(in srgb, var(--rail-accent) 84%, white); border-color: var(--rail-accent); box-shadow: 0 4px 14px color-mix(in srgb, var(--rail-accent) 22%, transparent); transform: translateY(-1px); }
+.fourix-agent__composer button:focus-visible { outline: 2px solid var(--rail-accent); outline-offset: 3px; }
+.fourix-agent__composer button:active:not(:disabled) { transform: translateY(0); }
+.fourix-agent__composer button:disabled { cursor: not-allowed; opacity: 0.38; box-shadow: none; }
+.fourix-agent__note { margin: 0; padding: 0.5rem 1rem 0.75rem; color: var(--text-faint); font-size: 0.58rem; line-height: 1.45; text-align: center; }
+
+@media (max-width: 480px) { .fourix-agent { --agent-bottom-inset: max(0.75rem, calc(0.75rem + env(safe-area-inset-bottom))); right: 0.75rem; } .fourix-agent__nudge { min-width: 13rem; max-width: min(15rem, calc(100vw - 6.5rem)); } .fourix-agent__nudge--top { right: calc(100% + 0.13rem); min-width: 13rem; max-width: min(15rem, calc(100vw - 2rem)); } }
+
+@media (prefers-reduced-motion: reduce) { .fourix-agent__nudge, .fourix-agent__nudge-icon, .fourix-agent__blink-icon, .fourix-agent__brand-icon { animation: none; transition-duration: 1ms; } }
+
+/* ==================================================================== *
  * FAQ accordion (/faq)
  * ==================================================================== */
 
