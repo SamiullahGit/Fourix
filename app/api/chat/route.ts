@@ -1,4 +1,11 @@
-const MODEL = 'gemini-3.6-flash'
+import { isJunk } from './junk'
+
+/* Flash Lite: 500 RPD / 15 RPM on the free tier, versus 20 RPD / 5 RPM for
+   gemini-3.6-flash. Confirmed present in the live models listing for this
+   project earlier today (alongside gemini-2.5-flash-lite, gemini-3.1-flash-lite
+   and gemini-flash-lite-latest) — see the note in the report about re-verifying
+   once the API key is working again. */
+const MODEL = 'gemini-3.5-flash-lite'
 const MAX_MESSAGE_LENGTH = 1200
 const MAX_HISTORY = 8
 const MINUTE_LIMIT = 10
@@ -152,6 +159,14 @@ export async function POST(request: Request) {
       return json({ error: 'Please keep your message short and try again.' }, 400)
     }
 
+    /* Pre-flight: obvious gibberish is answered locally so it never costs an
+       upstream request. Runs after the rate limiter (so it cannot be used to
+       probe for free) and before any API call. Deliberately conservative —
+       see junk.ts; anything ambiguous is passed through. */
+    if (isJunk(message)) {
+      return json({ reply: "I didn't quite catch that — could you rephrase?" })
+    }
+
     const apiKey = process.env.GEMINI_API_KEY
     if (!apiKey) return json({ error: 'The agent is taking a short break. Please book a quick call, or visit the FAQ for answers to common questions.' }, 503)
     /* Only USER turns from the client are trusted. Assistant turns are
@@ -186,10 +201,11 @@ export async function POST(request: Request) {
         body: JSON.stringify({
           systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
           contents,
+          // No thinkingConfig: the lite model gains nothing from it and it
+          // only adds latency. temperature and maxOutputTokens unchanged.
           generationConfig: {
             temperature: 0.55,
             maxOutputTokens: 512,
-            thinkingConfig: { thinkingLevel: 'low' },
           },
         }),
         cache: 'no-store',
